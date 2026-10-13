@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>重複資料刪除與資料壓縮</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --info:#2f6f9e; --warn:#a9671a; --warn-soft:#f9efdf;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* reduction pipeline */
+  .pipe{margin-top:24px;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--surface);padding:20px 18px 18px}
+  .prow .pl{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--muted);margin-bottom:7px}
+  .prow .pl b{color:var(--ink);font-weight:700}
+  .blocks{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .blk{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:.9rem;box-shadow:0 2px 5px rgba(0,0,0,.14)}
+  .blk.a{background:var(--accent)} .blk.b{background:var(--info)} .blk.c{background:var(--warn)}
+  .blk.sm{width:27px;height:27px;font-size:.74rem;border-radius:7px}
+  .blk.ref{background:var(--surface-2);color:var(--muted);border:1px dashed var(--border-strong);box-shadow:none;font-size:1rem}
+  .parr{color:var(--accent-strong);font-weight:800;font-size:1.15rem;line-height:1;padding:9px 0 9px 4px}
+  .parr small{font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:500;color:var(--muted);margin-left:8px}
+  .pipe-cap{margin:15px 2px 0;font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout.warn h3{color:var(--warn)}
+
+  /* models */
+  .models{display:grid;gap:12px;margin-top:20px}
+  .mg{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline}
+  .mg .ms{font-family:"IBM Plex Mono",monospace;font-weight:700;color:var(--accent-strong);white-space:nowrap}
+  .mg .ml{color:var(--ink);font-size:.93rem;line-height:1.8}
+  @media(max-width:560px){.mg{grid-template-columns:1fr;gap:4px}}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 儲存效率 · #資料縮減</p>
+      <h1>Synology 重複資料刪除與資料壓縮:用更少空間存更多資料</h1>
+      <p class="lead">Synology 透過<strong>後處理(Post-process)資料縮減</strong>——<strong>重複資料刪除</strong>與<strong>資料壓縮</strong>——讓你用更少的儲存空間存放更多資料。重複資料刪除會移除儲存空間上<strong>相同的資料區塊</strong>,資料壓縮則<strong>縮減區塊內的資料大小</strong>;兩者都在<strong>不影響資料完整性</strong>的前提下最佳化空間使用。此功能<strong>須搭配 Synology 原廠硬碟</strong>才能支援。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#重複資料刪除</span><span>#資料壓縮</span><span>#儲存效率</span><span>#Btrfs</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/UrOASqaMNm0"
+        title="Synology 硬碟重複資料刪除與資料壓縮"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology HDD 重複資料刪除與資料壓縮</b>　·　<a href="https://youtu.be/UrOASqaMNm0" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- reduction pipeline -->
+    <div class="pipe" role="img" aria-label="資料縮減示意:原始有重複的資料區塊,經重複資料刪除只留唯一區塊,再經資料壓縮縮小每個區塊。">
+      <div class="prow">
+        <p class="pl"><b>原始資料</b>　含重複區塊</p>
+        <div class="blocks">
+          <span class="blk a">A</span><span class="blk a">A</span><span class="blk b">B</span><span class="blk a">A</span><span class="blk c">C</span><span class="blk b">B</span>
+        </div>
+      </div>
+      <div class="parr" aria-hidden="true">↓<small>重複資料刪除:相同區塊只留一份</small></div>
+      <div class="prow">
+        <p class="pl"><b>去重後</b>　只保留唯一區塊(其餘以指標參照)</p>
+        <div class="blocks">
+          <span class="blk a">A</span><span class="blk b">B</span><span class="blk c">C</span>
+          <span class="blk ref">↩</span><span class="blk ref">↩</span><span class="blk ref">↩</span>
+        </div>
+      </div>
+      <div class="parr" aria-hidden="true">↓<small>資料壓縮:再縮小每個區塊的資料</small></div>
+      <div class="prow">
+        <p class="pl"><b>再壓縮後</b>　占用空間更小</p>
+        <div class="blocks">
+          <span class="blk a sm">A</span><span class="blk b sm">B</span><span class="blk c sm">C</span>
+        </div>
+      </div>
+      <p class="pipe-cap">先去除重複、再壓縮內容:相同的資料只存一份,每份又更小,整體占用空間大幅下降。</p>
+    </div>
+
+    <div class="callout warn">
+      <h3>使用條件:須搭配 Synology 原廠硬碟</h3>
+      <p>重複資料刪除與資料壓縮<b>僅在使用 Synology 原廠硬碟(HDD／SSD)時才支援</b>——搭配非 Synology 品牌硬碟將無法啟用此功能。請同時確認你的機種在下方的支援清單中。</p>
+    </div>
+
+    <!-- 01 two techniques -->
+    <section>
+      <h2><span class="n">01</span>兩種資料縮減方式</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M14 17h6M17 14v6"/></svg></span>
+          <h3>重複資料刪除</h3>
+          <p>找出儲存空間上<b>完全相同的資料區塊</b>,只保留一份,其餘以指標參照——重複越多,省得越多。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8 12h8"/></svg></span>
+          <h3>資料壓縮</h3>
+          <p>把<b>區塊內的資料再壓小</b>,用更少的位元存同樣的內容,進一步降低占用空間。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 02 post-process -->
+    <section>
+      <h2><span class="n">02</span>關於「後處理(Post-process)」</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>寫入後才處理:</b>資料先正常寫入,縮減作業在<b>背景(後處理)</b>進行,不卡住即時存取。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>不影響資料完整性:</b>去重與壓縮都在<b>確保資料正確</b>的前提下進行,還原後內容不變。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>用更少空間存更多:</b>特別適合有大量<b>重複檔案</b>(如虛擬機、備份、影像素材)的情境。</p></div>
+      </div>
+    </section>
+
+    <!-- 03 supported models -->
+    <section>
+      <h2><span class="n">03</span>支援機種</h2>
+      <p class="sec-sub">以下為 2026 年前的支援機種(實際以 Synology 官方相容性為準)。</p>
+      <div class="models">
+        <div class="mg"><span class="ms">FS 系列</span><span class="ml">FS6420、FS6400、FS3420、FS2500、FS200T</span></div>
+        <div class="mg"><span class="ms">SA 系列</span><span class="ml">SA3200D、SA3400D、SA3410、SA3610、SA6400</span></div>
+        <div class="mg"><span class="ms">RS 系列</span><span class="ml">RS3621RPxs、RS3626xs、RS4826xs+、RS6426xs+、RS1626xs+、RS2423+、RS2423RP+II、RS2825RP+、RS422+、RS826+、RS826RP+</span></div>
+        <div class="mg"><span class="ms">DS 系列</span><span class="ml">DS1823xs+、DS3622xs+、DS1825+、DS2422+、DS1525+、DS725+、DS925+、DS425+、DS225+</span></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/DSM/StorageManager/volume_btrfs_dedup?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心:重複資料刪除與資料壓縮</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;是否支援資料縮減、重複資料刪除/壓縮的適用儲存空間(Btrfs)、節省幅度與機種清單會因型號、DSM 版本與資料內容而異;且<b>須搭配 Synology 原廠硬碟</b>才能支援,實際請以 Synology 官方相容性與文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

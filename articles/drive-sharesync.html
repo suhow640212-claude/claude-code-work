@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drive ShareSync 雙向同步</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* sync diagram */
+  .sync{display:flex;align-items:stretch;gap:14px;margin-top:24px}
+  .sync .site{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:20px 14px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .sync .site .ic{width:48px;height:48px;border-radius:12px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;margin-bottom:3px}
+  .sync .site .ic svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .sync .site .role{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.06em;color:var(--accent-strong);text-transform:uppercase}
+  .sync .site .nm{font-weight:800;font-size:1rem}
+  .sync .site .sub{font-size:.8rem;color:var(--muted)}
+  .sync .link{flex:none;align-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--accent-strong);min-width:118px}
+  .sync .link .ar{font-size:1.7rem;font-weight:800;line-height:1}
+  .sync .link .lb{font-family:"IBM Plex Mono",monospace;font-size:.74rem;font-weight:700;text-align:center}
+  .sync .link .lb2{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--muted)}
+  .sync-cap{margin:13px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .sync{flex-direction:column}
+    .sync .link{flex-direction:row;gap:9px}
+    .sync .link .ar{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 檔案同步 · #DriveShareSync</p>
+      <h1>Synology Drive ShareSync:跨辦公室的資料即時雙向同步</h1>
+      <p class="lead">有兩地辦公室需要檔案同步,或公司與家中的 NAS 想即時同步嗎?<strong>Synology Drive ShareSync</strong> 可讓<strong>兩台 NAS</strong> 之間的共用資料夾進行<strong>即時雙向或單向同步</strong>:兩個地點都能在<strong>當地存取檔案</strong>,再即時同步到異地 NAS。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#DriveShareSync</span><span>#SynologyDrive</span><span>#雙向同步</span><span>#異地同步</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/O29Rw6uoVkI"
+        title="跨辦公室的資料雙向同步作業 － Synology Drive ShareSync"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>跨辦公室的資料雙向同步作業 － Synology Drive ShareSync</b>　·　<a href="https://youtu.be/O29Rw6uoVkI" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>以左、右兩個視窗代表兩地辦公室各自的 NAS,示範兩台之間以 <b>Drive ShareSync</b> 進行<b>即時雙向同步</b>的運作。</div>
+
+    <!-- sync diagram -->
+    <div class="sync" role="img" aria-label="雙向同步架構:辦公室 A 的 NAS 與辦公室 B 的 NAS,透過 Drive ShareSync 即時雙向同步。">
+      <div class="site">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="role">辦公室 A</span>
+        <span class="nm">本地 NAS</span>
+        <span class="sub">當地存取</span>
+      </div>
+      <div class="link" aria-hidden="true">
+        <span class="ar">⇄</span>
+        <span class="lb">即時雙向同步</span>
+        <span class="lb2">Drive ShareSync</span>
+      </div>
+      <div class="site">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="role">辦公室 B</span>
+        <span class="nm">本地 NAS</span>
+        <span class="sub">當地存取</span>
+      </div>
+    </div>
+    <p class="sync-cap">兩地各有本地 NAS,平時在當地讀寫檔案;Drive ShareSync 讓兩台之間的共用資料夾即時雙向同步。</p>
+
+    <!-- 01 modes -->
+    <section>
+      <h2><span class="n">01</span>兩種同步模式</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8h11M18 8l-3-3M18 8l-3 3"/><path d="M17 16H6M6 16l3-3M6 16l3 3"/></svg></span>
+          <h3>即時雙向同步</h3>
+          <p>兩地任一端的<b>新增、修改或刪除</b>,都會<b>即時同步到另一端</b>,兩邊內容保持一致。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span>
+          <h3>單向同步</h3>
+          <p>只從<b>來源同步到目標</b>(例如由主要站點發佈到其他站點),適合單向發佈或備援。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 02 why -->
+    <section>
+      <h2><span class="n">02</span>使用情境</h2>
+      <p class="sec-sub">Drive ShareSync 常見的應用情境:</p>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>兩地辦公室:</b>兩個辦公室各有一台 NAS,各自在當地存取,檔案即時雙向同步,兩邊隨時一致。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>公司與住家:</b>公司與家中各放一台 NAS,資料即時互通,在家也能接續工作。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>異地備援:</b>重要共用資料夾同步到異地 NAS,單一地點故障時仍保有副本。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>單向派送:</b>以單向同步由主要站點發佈資料到其他站點,統一更新內容。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/SynologyDrive/drive_sharesync?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心:Drive ShareSync</a>
+        <a href="https://www.synology.com/zh-tw/dsm/packages/SynologyDrive" target="_blank" rel="noopener noreferrer">Synology:Synology Drive 適用機種</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;Drive ShareSync 的同步模式、即時性、所需套件(Synology Drive Server)與適用機種會因 DSM／套件版本與網路環境而異,實際請以 Synology 官方文件與相容性清單為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

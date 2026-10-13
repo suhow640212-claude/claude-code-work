@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drive 隨需同步</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --info:#2f6f9e; --info-soft:#e4eef6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* drive explorer mockup */
+  .explorer{margin-top:24px;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+  .ex-head{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);font-weight:700;font-size:.93rem}
+  .ex-head .lg{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+  .ex-head .lg svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .ex-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .ex-row:last-child{border-bottom:0}
+  .ex-row .fic{width:34px;height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);display:grid;place-items:center;flex:none}
+  .ex-row .fic svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .ex-row .fn{font-weight:600;font-size:.93rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ex-row .meta{text-align:right}
+  .st{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.74rem;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .st svg{width:13px;height:13px;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .st.online{background:var(--info-soft);color:var(--info)}
+  .st.online svg{stroke:var(--info)}
+  .st.local{background:var(--accent-soft);color:var(--accent-strong)}
+  .st.local svg{stroke:var(--accent-strong)}
+  .ex-row .sz{display:block;font-size:.7rem;color:var(--muted);margin-top:3px;font-family:"IBM Plex Mono",monospace}
+  .ex-cap{padding:12px 16px;background:var(--surface-2);border-top:1px solid var(--border);font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · Drive 隨需同步 · #OnDemandSync</p>
+      <h1>Synology Drive 隨需同步:檔案同步到電腦,又不占本機空間</h1>
+      <p class="lead">透過 <strong>Synology Drive</strong>,電腦與 NAS 之間的檔案能無縫同步;而<strong>隨需同步(On-Demand Sync)</strong>更讓檔案<strong>不占用本機空間</strong>——你照常在電腦上操作檔案,需要時才由 NAS <strong>自動下載</strong>,並可<strong>隨時釋放</strong>本機磁碟空間。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#SynologyDrive</span><span>#隨需同步</span><span>#OnDemandSync</span><span>#節省空間</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/-8gnC3UBwag"
+        title="Synology Drive 隨需同步 On-Demand Sync"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology Drive 隨需同步(On-Demand Sync)</b>　·　<a href="https://youtu.be/-8gnC3UBwag" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>Synology Drive 的隨需同步——檔案以「僅線上」占位、<b>開啟時自動下載</b>,以及<b>釋放本機空間</b>的操作。</div>
+
+    <!-- explorer mockup -->
+    <div class="explorer" role="img" aria-label="電腦上的 Synology Drive 資料夾:多數檔案為「僅線上」不占空間,開啟過的檔案為「本機可用」。">
+      <div class="ex-head">
+        <span class="lg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/></svg></span>
+        Synology Drive － 我的檔案
+      </div>
+      <div class="ex-row">
+        <span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></span>
+        <span class="fn">專案提案.docx</span>
+        <span class="meta"><span class="st online"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/></svg>僅線上</span><span class="sz">0 B 本機</span></span>
+      </div>
+      <div class="ex-row">
+        <span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></span>
+        <span class="fn">報價單.xlsx</span>
+        <span class="meta"><span class="st local"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>本機可用</span><span class="sz">2.4 MB</span></span>
+      </div>
+      <div class="ex-row">
+        <span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></span>
+        <span class="fn">產品影片.mp4</span>
+        <span class="meta"><span class="st online"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/></svg>僅線上</span><span class="sz">0 B 本機</span></span>
+      </div>
+      <div class="ex-row">
+        <span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></span>
+        <span class="fn">設計稿.psd</span>
+        <span class="meta"><span class="st online"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/></svg>僅線上</span><span class="sz">0 B 本機</span></span>
+      </div>
+      <p class="ex-cap">在電腦上看得到<b>所有檔案</b>;「僅線上」不占本機空間,開啟過的「本機可用」才下載到電腦。</p>
+    </div>
+
+    <!-- 01 how it works -->
+    <section>
+      <h2><span class="n">01</span>隨需同步怎麼運作</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>以「僅線上」顯示:</b>電腦的 Drive 資料夾看得到<b>所有檔案</b>,但僅線上的檔案<b>不占本機空間</b>(以占位檔呈現)。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>開啟時自動下載:</b>當你開啟某個檔案,系統會<b>自動從 NAS 下載</b>,即可照常編輯使用。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>隨時釋放空間:</b>檔案用完後可選「<b>釋放空間</b>」,讓它變回僅線上,立即歸還本機磁碟空間。</p></div>
+      </div>
+    </section>
+
+    <!-- 02 use cases -->
+    <section>
+      <h2><span class="n">02</span>使用情境</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>筆電硬碟不大:</b>想在電腦上看到<b>整個 NAS 的檔案</b>,又不想占滿本機硬碟。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>外出工作:</b>只帶筆電,臨時需要某份檔案時再<b>即時下載</b>。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>大型素材庫:</b>影音、設計素材龐大,<b>只下載當下要用的</b>,用完即釋放。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>控管本機空間:</b>隨時釋放不常用的檔案,讓磁碟保持寬裕。</p></div>
+      </div>
+    </section>
+
+    <!-- 03 requirements -->
+    <section>
+      <h2><span class="n">03</span>支援軟體條件</h2>
+      <div class="callout">
+        <h3>使用隨需同步前請確認</h3>
+        <ul>
+          <li>電腦:<b>Windows 10(版本 1809)或以上</b>。</li>
+          <li><b>Synology Drive Client 2.0.0</b> 或以上版本。</li>
+          <li>NAS 端:<b>Synology Drive Server 套件 2.0.0</b> 或以上版本。</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/drive" target="_blank" rel="noopener noreferrer">Synology:Synology Drive 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/packages/SynologyDrive" target="_blank" rel="noopener noreferrer">Synology:Synology Drive 適用機種</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;隨需同步的可用性、操作介面與軟體版本需求會因 Synology Drive Client／Server 版本與作業系統而異,實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

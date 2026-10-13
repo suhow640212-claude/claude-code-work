@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR code 偵測 · Surveillance Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* qr scan visual */
+  .qrview{margin-top:24px;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;background:var(--surface)}
+  .screen{position:relative;aspect-ratio:16/9;background:linear-gradient(160deg,#1c2c38,#2b3f4d);display:grid;place-items:center}
+  .screen::before{content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+    background-size:38px 38px}
+  .qrbox{position:relative;z-index:2;padding:13px}
+  .qrtile{width:clamp(112px,30vw,186px);height:clamp(112px,30vw,186px);background:#fdfdfd;border-radius:10px;
+    padding:9px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .qrtile svg{display:block;width:100%;height:100%}
+  .qrbox .c{position:absolute;width:22px;height:22px;border:3px solid #37c9ba;z-index:3}
+  .qrbox .c.tl{top:0;left:0;border-right:0;border-bottom:0}
+  .qrbox .c.tr{top:0;right:0;border-left:0;border-bottom:0}
+  .qrbox .c.bl{bottom:0;left:0;border-right:0;border-top:0}
+  .qrbox .c.br{bottom:0;right:0;border-left:0;border-top:0}
+  .scr-lbl{position:absolute;top:13px;left:13px;z-index:4;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;padding:3px 10px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .scr-lbl .d{width:7px;height:7px;border-radius:50%;background:#7effdf}
+  .result-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-soft);
+    border-top:1px solid var(--border);font-size:.9rem;color:var(--ink);flex-wrap:wrap}
+  .result-bar svg{width:18px;height:18px;stroke:var(--accent-strong);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .result-bar b{color:var(--accent-strong);font-weight:700}
+  .result-bar .mono{font-family:"IBM Plex Mono",monospace;color:var(--ink);background:#fff;border:1px solid var(--border);padding:1px 9px;border-radius:6px}
+  .qr-cap{padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);
+    font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:8px 15px;font-size:.9rem;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:9px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · 新功能 · #QRcode偵測</p>
+      <h1>QR code 偵測:掃到就自動加書籤,關鍵字秒找錄影</h1>
+      <p class="lead">Synology AI 攝影機<strong>（BC500 / TC500 / CC400W）</strong>新增 <strong>QR code 偵測</strong>:當畫面出現 QR code,系統會<strong>自動以它的內容建立書籤</strong>,之後只要用<strong>關鍵字</strong>就能快速搜尋到對應的錄影事件。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#QRcode偵測</span><span>#BC500</span><span>#TC500</span><span>#CC400W</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/ssEzykm_HgI"
+        title="Synology AI 網路攝影機 QR code 偵測"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology AI 網路攝影機 QR code 偵測</b>　·　<a href="https://youtu.be/ssEzykm_HgI" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- qr scan visual -->
+    <div class="qrview" role="img" aria-label="QR code 偵測示意:攝影機偵測到 QR code 後,自動以其內容建立書籤。">
+      <div class="screen">
+        <span class="scr-lbl"><span class="d"></span>QR 偵測中</span>
+        <div class="qrbox">
+          <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+          <div class="qrtile">
+            <svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true">
+              <rect width="25" height="25" fill="#fdfdfd"/>
+              <g fill="#15202a">
+                <rect x="0" y="0" width="7" height="7"/><rect x="1" y="1" width="5" height="5" fill="#fdfdfd"/><rect x="2" y="2" width="3" height="3"/>
+                <rect x="18" y="0" width="7" height="7"/><rect x="19" y="1" width="5" height="5" fill="#fdfdfd"/><rect x="20" y="2" width="3" height="3"/>
+                <rect x="0" y="18" width="7" height="7"/><rect x="1" y="19" width="5" height="5" fill="#fdfdfd"/><rect x="2" y="20" width="3" height="3"/>
+                <rect x="9" y="0" width="2" height="2"/><rect x="13" y="0" width="2" height="2"/><rect x="10" y="3" width="2" height="2"/><rect x="14" y="3" width="2" height="2"/>
+                <rect x="9" y="9" width="2" height="2"/><rect x="12" y="9" width="2" height="2"/><rect x="15" y="9" width="2" height="2"/>
+                <rect x="9" y="12" width="2" height="2"/><rect x="13" y="12" width="2" height="2"/><rect x="16" y="11" width="2" height="2"/>
+                <rect x="0" y="9" width="2" height="2"/><rect x="3" y="10" width="2" height="2"/><rect x="0" y="13" width="2" height="2"/><rect x="4" y="13" width="2" height="2"/>
+                <rect x="9" y="15" width="2" height="2"/><rect x="12" y="16" width="2" height="2"/>
+                <rect x="19" y="9" width="2" height="2"/><rect x="22" y="9" width="2" height="2"/><rect x="20" y="12" width="2" height="2"/><rect x="23" y="13" width="2" height="2"/>
+                <rect x="18" y="15" width="2" height="2"/><rect x="21" y="16" width="2" height="2"/><rect x="23" y="18" width="2" height="2"/>
+                <rect x="9" y="18" width="2" height="2"/><rect x="12" y="19" width="2" height="2"/><rect x="9" y="22" width="2" height="2"/><rect x="13" y="22" width="2" height="2"/>
+                <rect x="16" y="20" width="2" height="2"/><rect x="18" y="22" width="2" height="2"/><rect x="21" y="21" width="2" height="2"/><rect x="23" y="23" width="2" height="2"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="result-bar">
+        <svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+        <b>書籤已建立</b><span class="mono">PKG-20261002</span>
+      </div>
+      <p class="qr-cap">攝影機偵測到 QR code,立即以它的內容(例如包裹編號)自動建立書籤。</p>
+    </div>
+
+    <!-- 01 how it works -->
+    <section>
+      <h2><span class="n">01</span>怎麼運作</h2>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3M14 21h7"/></svg></span>
+          <p class="ttl">偵測 QR code</p>
+          <p class="ds">攝影機在畫面中認出 QR code</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></span>
+          <p class="ttl">自動加上書籤</p>
+          <p class="ds">以 QR code 內容建立事件書籤</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+          <p class="ttl">關鍵字搜尋</p>
+          <p class="ds">用關鍵字一秒找到該段錄影</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 use cases -->
+    <section>
+      <h2><span class="n">02</span>適合的應用</h2>
+      <p class="sec-sub">把實體的 QR code 直接對應到影像時間軸,事後用關鍵字就能回查。</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>物流・包裹進出</span>
+        <span class="chip"><span class="dot"></span>門禁・訪客報到</span>
+        <span class="chip"><span class="dot"></span>產線・資產盤點</span>
+        <span class="chip"><span class="dot"></span>展場・活動核銷</span>
+      </div>
+      <div class="callout">
+        <p><b>一句話:</b>QR code 偵測把「<b>掃碼這件事</b>」變成可搜尋的影像書籤——輸入編號或關鍵字,就能直接跳到那一刻的錄影,不必再逐段翻找。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;支援 QR code 偵測的機型(BC500／TC500／CC400W)、書籤與搜尋行為會因攝影機型號、韌體與 Surveillance Station 版本而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

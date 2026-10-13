@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MailPlus 垃圾信防制</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --vio:#5b4a9a; --vio-soft:#ece8f6;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* tool overview */
+  .tools{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  .tl{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .tl .k{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.8rem;border-radius:6px;padding:1px 9px;align-self:flex-start}
+  .tl.a .k{background:var(--lock-soft);color:var(--lock)} .tl.b .k{background:var(--vio-soft);color:var(--vio)}
+  .tl h3{margin:0;font-size:1.06rem;font-weight:800}
+  .tl p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .tl ul{margin:0;padding-left:1.1em;color:var(--muted);font-size:.88rem}
+  .tl li{margin:0 0 3px}
+  .tl .th{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);font-size:.86rem;color:var(--muted)}
+  .tl .th b{font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--danger)}
+  @media (max-width:640px){ .tools{grid-template-columns:1fr} }
+
+  /* score meter */
+  .meter{margin-top:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .meter .lab{font-size:.8rem;color:var(--muted);margin-bottom:8px}
+  .bar{display:flex;height:26px;border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative}
+  .bar span{display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;color:#fff;white-space:nowrap}
+  .bar .s1{background:var(--lock)} .bar .s2{background:var(--vio)} .bar .s3{background:var(--accent)}
+  .bar .th{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--danger)}
+  .meter .res{margin-top:8px;font-size:.84rem;color:var(--danger);font-weight:700}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .sa .step .bullet{background:var(--lock-soft);color:var(--lock)}
+  .mcp .step .bullet{background:var(--vio-soft);color:var(--vio)}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--accent-strong)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .tip{margin:12px 0 4px;background:var(--accent-soft);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .tip b{color:var(--accent-strong)}
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+  .chips span{font-size:.86rem;background:var(--danger-soft);color:var(--danger);border-radius:7px;padding:2px 10px;font-weight:700}
+
+  .code{margin:8px 0 10px;background:#17232e;border-radius:10px;padding:12px 14px}
+  .code .c{display:block;color:#9aabb8;font-size:.74rem;margin-bottom:4px}
+  .code code{display:block;color:#a9efe5 !important;font-family:"IBM Plex Mono",monospace;font-size:.84rem !important;word-break:break-all;user-select:all;-webkit-user-select:all}
+
+  .fields{display:grid;gap:0;margin:4px 0 10px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:8px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:.9rem}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-weight:700}
+  .fd .v{color:var(--muted)}
+  .fd .v b{color:var(--ink)}
+  .fd code{font-family:"IBM Plex Mono",monospace;font-size:.84rem;color:var(--accent-strong);word-break:break-all}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · 安全性 · 防垃圾郵件</p>
+      <h1>Synology MailPlus Server 垃圾信防制</h1>
+      <p class="lead">Synology MailPlus Server 提供兩種垃圾信防制工具：<b>SpamAssassin</b> 與 <b>MCP 資料保護</b>。本篇針對這兩項工具，說明地址過濾、附件過濾、關鍵字評分與正規表達式規則的設定方式。</p>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>兩種工具比較</h2>
+      <div class="tools">
+        <div class="tl a">
+          <span class="k">安全性 › 防垃圾郵件</span>
+          <h3>SpamAssassin</h3>
+          <ul><li>地址過濾：指定寄件者標記為垃圾／非垃圾</li><li>附件過濾：拒收特定副檔名</li><li>關鍵字過濾：關鍵字評分</li></ul>
+          <div class="th">總分高於門檻（預設 <b>5</b>）即標記為垃圾郵件</div>
+        </div>
+        <div class="tl b">
+          <span class="k">安全性 › 資料保護</span>
+          <h3>MCP 資料保護</h3>
+          <ul><li>以「包含」或「符合正規表達式」比對標題與內容</li><li>可一次比對多個字詞或號碼格式</li><li>可設定隔離、刪除等處理動作</li></ul>
+          <div class="th">總分達到門檻（範例 <b>100</b>）即判定為垃圾郵件</div>
+        </div>
+      </div>
+      <div class="meter" role="img" aria-label="評分示意：多個條件分數累加，超過門檻即判定為垃圾郵件">
+        <div class="lab">評分機制示意：多個條件的分數會累加，總分超過門檻即判定為垃圾郵件</div>
+        <div class="bar"><span class="s1" style="width:30%">關鍵字 A +3</span><span class="s2" style="width:25%">關鍵字 B +2.5</span><span class="s3" style="width:20%">其他規則 +2</span><span class="th" style="left:50%"></span></div>
+        <div class="res">總分 7.5 ＞ 門檻 5 → 標記為垃圾郵件</div>
+      </div>
+    </section>
+
+    <!-- SpamAssassin -->
+    <section class="sa">
+      <h2><span class="n">01</span>SpamAssassin 設定</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟自訂垃圾郵件過濾<span class="path">MailPlus Server › 安全性 › 防垃圾郵件 › 自訂垃圾郵件過濾</span></h3>
+          <p>於 <b>防垃圾郵件</b> 頁籤按 <b>自訂垃圾郵件過濾</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-1.jpg" alt="MailPlus Server 安全性防垃圾郵件頁籤，紅框標示自訂垃圾郵件過濾"><figcaption>安全性 › 防垃圾郵件 › 自訂垃圾郵件過濾</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>地址過濾</h3>
+          <p>於 <b>地址過濾</b> 頁籤按 <b>新增</b>，輸入要過濾的寄件者電子郵件地址，並選擇 <b>標記為垃圾郵件</b> 或 <b>標記為非垃圾郵件</b>。地址可使用萬用字元，例如以 <code>*</code> 比對整個網域。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-2.jpg" alt="自訂垃圾郵件過濾地址過濾頁籤，列出寄件者條件與標記為垃圾郵件或非垃圾郵件"><figcaption>地址過濾：標記為垃圾郵件／非垃圾郵件。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>附件過濾</h3>
+          <p>於 <b>附件過濾</b> 頁籤新增要阻擋的副檔名，附件過濾器會<b>拒收</b>含有這些檔案類型附件的郵件。</p>
+          <div class="tip"><b>建議：</b>可加入 <b>.zip</b> 或其他想阻擋的副檔名。目前夾帶 zip 檔的郵件，多數為網路釣魚郵件。</div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-3.jpg" alt="自訂垃圾郵件過濾附件過濾頁籤，列出 ani、bat、cab、cmd 等檔案類型"><figcaption>附件過濾：列出要拒收的檔案類型。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>開啟進階設定<span class="path">MailPlus Server › 安全性 › 防垃圾郵件 › 進階設定</span></h3>
+          <p>回到 <b>防垃圾郵件</b> 頁籤，按 <b>進階設定</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-4.jpg" alt="防垃圾郵件頁籤，紅框標示進階設定"><figcaption>防垃圾郵件 › 進階設定</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>開啟關鍵字過濾</h3>
+          <p>於 <b>一般</b> 頁籤可設定 <b>分數高於此數字則標記為垃圾郵件</b> 的門檻（預設 5，標準），再按 <b>關鍵字過濾</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-5.jpg" alt="進階設定一般頁籤，分數門檻 5 標準，紅框標示關鍵字過濾"><figcaption>進階設定 › 一般：分數門檻與關鍵字過濾。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">6</span><div>
+          <h3>新增關鍵字並給予評分</h3>
+          <p>按 <b>新增</b>，選擇比對的 <b>目標</b>（例如內容含主旨），輸入要標記為垃圾的 <b>關鍵字</b>，並給予 <b>1～10 分</b> 的評分。郵件符合的所有條件分數會<b>累加</b>，總分高於門檻即標記為垃圾郵件。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-6.jpg" alt="關鍵字過濾新增視窗，目標內容含主旨，關鍵字我真是垃圾，分數 10"><figcaption>關鍵字過濾：新增關鍵字並設定分數。</figcaption></figure>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- MCP -->
+    <section class="mcp">
+      <h2><span class="n">02</span>MCP 資料保護設定</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟 MCP 規則管理<span class="path">MailPlus Server › 安全性 › 資料保護 › 管理 MCP 規則</span></h3>
+          <p>勾選 <b>啟動 MCP</b>，設定 <b>MCP 門檻分數</b>（範例 100），並選擇超過門檻時的處理動作（例如 <b>儲存至隔離區</b>），再按 <b>管理 MCP 規則</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-7.jpg" alt="MailPlus Server 安全性資料保護頁籤，啟動 MCP，門檻分數 100，紅框標示管理 MCP 規則"><figcaption>安全性 › 資料保護 › 管理 MCP 規則</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>分析垃圾信的特徵字詞</h3>
+          <p>以下列垃圾信為例，信中反覆出現幾個具代表性的字詞，可作為篩選條件：</p>
+          <div class="chips"><span>专业优势</span><span>买单报关</span><span>业务qq</span><span>微信同号</span></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-8.jpg" alt="垃圾信範例，紅框標示专业优势、买单报关、业务qq、微信同号等字詞"><figcaption>垃圾信範例：紅框為要篩選的字詞。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>以產生器建立正規表達式</h3>
+          <p>可使用線上工具 <a href="https://cloudlab.tw/wp/sampleFiles/RegExp/" target="_blank" rel="noopener noreferrer">正規表示式產生器</a>，將上述字詞分別輸入欄位，頁面下方即會產生對應的正規表達式，將其複製下來：</p>
+          <div class="code"><span class="c">產生的正規表達式（比對任一字詞）</span><code>(?:专业优势|买单报关|业务qq|微信同号)</code></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-9.jpg" alt="正規表示式線上產生器，輸入四個字詞並產生正規表達式"><figcaption>正規表示式產生器：輸入字詞後產生正規表達式。</figcaption></figure>
+          <div class="warn"><b>注意：</b>產生器輸出的格式為 <code>/(?:…)+/i</code>。填入 MCP 規則時，請只貼上中間的 <code>(?:专业优势|买单报关|业务qq|微信同号)</code>，前後的斜線與旗標不需輸入。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>新增 MCP 規則</h3>
+          <p>於 MCP 規則中按 <b>新增</b>，輸入：</p>
+          <div class="fields">
+            <div class="fd"><span class="k">名稱</span><span class="v">自訂規則名稱，例如「報關」</span></div>
+            <div class="fd"><span class="k">目標</span><span class="v">標題, 內容（含主旨）</span></div>
+            <div class="fd"><span class="k">關係</span><span class="v"><b>符合正規表達式</b></span></div>
+            <div class="fd"><span class="k">樣式</span><span class="v"><code>(?:专业优势|买单报关|业务qq|微信同号)</code></span></div>
+            <div class="fd"><span class="k">分數</span><span class="v">依規則的可信度給分；設為 100 即單一規則符合就達到門檻</span></div>
+          </div>
+          <p>郵件符合的所有 MCP 規則分數會累加，總分達到 <b>MCP 門檻分數（範例 100）</b> 時即判定為垃圾郵件。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-10.jpg" alt="新增 MCP 規則視窗，名稱報关，目標標題內容，樣式為正規表達式，分數 100"><figcaption>新增 MCP 規則：設定目標、樣式與分數。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>範例：篩選含中國手機號碼的郵件</h3>
+          <p>若不想收到內文含有中國手機號碼的郵件，可新增一條 <b>符合正規表達式</b> 的規則，樣式如下：</p>
+          <div class="code"><span class="c">中國手機號碼正規表達式</span><code>^(0|86|17951)?(13[0-9]|15[012356789]|18[0-9]|14[57]|17[678])[0-9]{8}$</code></div>
+          <div class="tip"><b>說明：</b><code>^</code> 與 <code>$</code> 代表整段文字必須「只有」手機號碼。若號碼夾雜在內文中，可移除開頭的 <code>^</code> 與結尾的 <code>$</code>：<br><code>(0|86|17951)?(13[0-9]|15[012356789]|18[0-9]|14[57]|17[678])[0-9]{8}</code></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-spamassassan-11.jpg" alt="編輯 MCP 規則，名稱中國手機，關係符合正規表達式，樣式為中國手機號碼正規表達式，分數 100"><figcaption>MCP 規則：篩選中國手機號碼。</figcaption></figure>
+          <p>延伸閱讀：<a href="https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Guide/Regular_expressions" target="_blank" rel="noopener noreferrer">正規表達式使用教學（MDN）</a></p>
+        </div></div>
+
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/MailServer/mailserver_spam?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心：防垃圾郵件</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；評分與門檻請依實際收到的郵件逐步調整，避免正常郵件被誤判。實際功能與畫面請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

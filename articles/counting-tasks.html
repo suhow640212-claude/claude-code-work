@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人流計數 · 計數任務</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* two modes */
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+  .mode{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .mode .men{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--accent-strong);letter-spacing:.08em;text-transform:uppercase}
+  .mode .mlbl{font-weight:800;font-size:1.08rem;margin:2px 0 12px}
+  .mini{position:relative;height:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:13px}
+  .mini .cline{position:absolute;left:50%;top:12px;bottom:12px;border-left:2px dashed var(--accent);transform:translateX(-50%)}
+  .mini .flow{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:.84rem;font-weight:700}
+  .mini .flow.in{top:30%;left:14%;color:var(--accent-strong)}
+  .mini .flow.out{bottom:30%;right:14%;color:var(--muted)}
+  .mini .zbox{position:absolute;inset:20px;border:2px dashed var(--accent);border-radius:10px}
+  .mini .pd{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .mini .zcount{position:absolute;top:10px;right:10px;background:var(--accent);color:#fff;font-family:"IBM Plex Mono",monospace;
+    font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:999px}
+  .counters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+  .cnt{background:var(--accent-soft);color:var(--accent-strong);border-radius:8px;padding:5px 11px;font-weight:700;font-size:.82rem;font-family:"IBM Plex Mono",monospace}
+  .mode p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.68}
+  .mode p b{color:var(--ink)}
+  @media(max-width:560px){.modes{grid-template-columns:1fr}}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  /* report chart */
+  .report{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 18px 16px;box-shadow:var(--shadow)}
+  .report .rt{font-weight:700;font-size:.95rem;margin:0 0 4px}
+  .report .rs{font-size:.8rem;color:var(--muted);margin:0 0 16px}
+  .chart{display:flex;align-items:flex-end;gap:clamp(4px,1.4vw,9px);height:clamp(130px,30vw,168px)}
+  .chart .b{flex:1;background:var(--accent);border-radius:5px 5px 2px 2px;opacity:.82;min-width:0}
+  .chart .b.peak{background:var(--accent-strong);opacity:1}
+  .xaxis{display:flex;gap:clamp(4px,1.4vw,9px);margin-top:8px}
+  .xaxis span{flex:1;text-align:center;font-size:.66rem;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · 計數任務 · #人流計數</p>
+      <h1>人流計數:跨線數進出、區域數停留,還能看報表</h1>
+      <p class="lead">Synology AI 網路攝影機內建<strong>計數任務</strong>:用<strong>跨線計數</strong>或<strong>區域計數</strong>來統計<strong>人物或車輛</strong>,掌握即時進出與停留數量。每台攝影機最多可設 <strong>3 個越線 + 3 個區域</strong>計數任務;再透過報表分析人車流量,優化動線規劃與數量管理。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#人流計數</span><span>#計數任務</span><span>#AI攝影機</span><span>#報表</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/_hu1uo50IIk"
+        title="人流計數偵測設定及報表－Synology AI 網路攝影機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>人流計數偵測設定及報表－Synology AI 網路攝影機</b>　·　<a href="https://youtu.be/_hu1uo50IIk" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- two modes -->
+    <div class="modes">
+      <div class="mode">
+        <div class="men">Line Crossing</div>
+        <div class="mlbl">跨線計數</div>
+        <div class="mini" role="img" aria-label="跨線計數示意:一條計數線,分別統計進與出。">
+          <span class="cline"></span>
+          <span class="flow in">進 →</span>
+          <span class="flow out">← 出</span>
+        </div>
+        <div class="counters"><span class="cnt">進 128</span><span class="cnt">出 95</span></div>
+        <p>畫一條<b>計數線</b>,統計通過的人或車,並分成<b>「進」與「出」</b>——適合看出入口的進出流量。</p>
+      </div>
+      <div class="mode">
+        <div class="men">Zone Counting</div>
+        <div class="mlbl">區域計數</div>
+        <div class="mini" role="img" aria-label="區域計數示意:框一個區域,統計區域內停留的數量。">
+          <span class="zbox"></span>
+          <span class="pd" style="top:40%;left:30%"></span>
+          <span class="pd" style="top:58%;left:46%"></span>
+          <span class="pd" style="top:42%;left:60%"></span>
+          <span class="pd" style="top:64%;left:36%"></span>
+          <span class="zcount">停留 12</span>
+        </div>
+        <div class="counters"><span class="cnt">目前 12</span><span class="cnt">尖峰 42</span></div>
+        <p>框一個<b>區域</b>,統計區域內<b>「停留」</b>的人或車數量——適合看等候區、賣場或容留人數。</p>
+      </div>
+    </div>
+
+    <!-- 01 setup points -->
+    <section>
+      <h2><span class="n">01</span>設定重點</h2>
+      <div class="callout">
+        <h3>建立計數任務前,先掌握這幾點</h3>
+        <ul>
+          <li><b>計數對象:</b>可選擇統計<b>人物</b>或<b>車輛</b>。</li>
+          <li><b>兩種方式:</b><b>跨線計數</b>看「進／出」流量,<b>區域計數</b>看「停留」數量。</li>
+          <li><b>即時數據:</b>包含即時進出與停留數量,一眼掌握現況。</li>
+          <li><b>任務數量:</b>每台 Synology Camera 最多支援 <b>3 個越線偵測任務</b>與 <b>3 個區域計數任務</b>。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 report -->
+    <section>
+      <h2><span class="n">02</span>報表與應用</h2>
+      <p class="sec-sub">把每天、每時段的人車流量整理成報表,就能看出趨勢。</p>
+      <div class="report">
+        <p class="rt">每小時人流（示意）</p>
+        <p class="rs">尖峰時段以深色標示</p>
+        <div class="chart">
+          <span class="b" style="height:28%"></span>
+          <span class="b" style="height:44%"></span>
+          <span class="b" style="height:60%"></span>
+          <span class="b" style="height:82%"></span>
+          <span class="b peak" style="height:96%"></span>
+          <span class="b" style="height:68%"></span>
+          <span class="b" style="height:54%"></span>
+          <span class="b" style="height:62%"></span>
+          <span class="b peak" style="height:90%"></span>
+          <span class="b" style="height:46%"></span>
+        </div>
+        <div class="xaxis">
+          <span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>動線規劃:</b>從進出與停留數據看出熱門動線與冷區,調整陳列、櫃位或指標。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>數量管理:</b>掌握區域即時容留人數,做人流管制、排隊疏導或安全控管。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>尖峰分析:</b>找出尖峰時段,據以安排人力、促銷檔期或停車調度。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;計數任務的方式(跨線／區域)、可計數對象、任務數量上限與報表內容會因攝影機型號、韌體與 Surveillance Station 版本而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MailPlus High Availability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --info:#2f6f9e; --info-soft:#e4eef6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.58rem,4.4vw,2.4rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* ha cluster diagram */
+  .ha{display:flex;align-items:stretch;gap:14px;margin-top:24px}
+  .hnode{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:20px 14px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .hnode.active{border-top:4px solid var(--accent)}
+  .hnode.standby{border-top:4px solid var(--info)}
+  .hnode .ic{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;margin-bottom:3px}
+  .hnode.active .ic{background:var(--accent-soft);color:var(--accent-strong)}
+  .hnode.standby .ic{background:var(--info-soft);color:var(--info)}
+  .hnode .ic svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .hnode .role{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+  .hnode.active .role{color:var(--accent-strong)}
+  .hnode.standby .role{color:var(--info)}
+  .hnode .nm{font-weight:800;font-size:1rem}
+  .hnode .sub{font-size:.8rem;color:var(--muted)}
+  .hlink{flex:none;align-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--accent-strong);min-width:96px}
+  .hlink .ar{font-size:1.7rem;font-weight:800;line-height:1}
+  .hlink .lb{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:700}
+  .ha-cap{margin:13px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .ha{flex-direction:column}
+    .hlink{flex-direction:row;gap:9px}
+    .hlink .ar{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node.warn-ic .ic{background:var(--danger-soft);color:var(--danger)}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 郵件伺服器 · #MailPlusHA</p>
+      <h1>Synology MailPlus High Availability:即時備援的高可用郵件伺服器</h1>
+      <p class="lead">郵件伺服器是企業營運的命脈——服務一旦中斷,溝通與交易都會停擺。<strong>Synology MailPlus Server</strong> 提供<strong>高可用性(High Availability)</strong>機制:以<strong>兩台伺服器</strong>組成<strong>即時備援叢集</strong>,把服務中斷的機率降到最低、最大化郵件服務時間。本篇對應的影片示範如何部署 MailPlus High Availability、建立高可用性叢集。</p>
+      <div class="tags">
+        <span>#MailPlus</span><span>#高可用性</span><span>#郵件伺服器</span><span>#MailPlusServer</span><span>#即時備援</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/uQjahHhbcEQ"
+        title="Synology MailPlus High Availability 即時備援郵件伺服器"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology MailPlus High Availability 即時備援郵件伺服器</b>　·　<a href="https://youtu.be/uQjahHhbcEQ" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>部署 <b>Synology MailPlus High Availability</b>,建立<b>高可用性(HA)叢集</b>。</div>
+
+    <!-- ha cluster diagram -->
+    <div class="ha" role="img" aria-label="MailPlus 高可用性叢集:主伺服器與備援伺服器即時同步,主故障時備援自動接手。">
+      <div class="hnode active">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <span class="role">Active · 主</span>
+        <span class="nm">MailPlus 主伺服器</span>
+        <span class="sub">對外提供郵件服務</span>
+      </div>
+      <div class="hlink" aria-hidden="true">
+        <span class="ar">⇄</span>
+        <span class="lb">即時同步</span>
+      </div>
+      <div class="hnode standby">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <span class="role">Standby · 備援</span>
+        <span class="nm">MailPlus 備援伺服器</span>
+        <span class="sub">隨時待命接手</span>
+      </div>
+    </div>
+    <p class="ha-cap">兩台伺服器組成高可用性叢集、資料即時同步;主伺服器一旦故障,備援伺服器會<b>自動接手</b>,郵件服務不中斷。</p>
+
+    <!-- 01 failover -->
+    <section>
+      <h2><span class="n">01</span>故障時如何不中斷</h2>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>
+          <p class="ttl">正常運作</p>
+          <p class="ds">主伺服器服務,備援即時同步</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node warn-ic">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span>
+          <p class="ttl">主伺服器故障</p>
+          <p class="ds">硬體或服務發生異常</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3"/><path d="M17 17H6M6 17l3-3M6 17l3 3"/></svg></span>
+          <p class="ttl">備援自動接手</p>
+          <p class="ds">備援升為主,服務持續</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 deploy -->
+    <section>
+      <h2><span class="n">02</span>部署重點</h2>
+      <div class="callout">
+        <h3>建立 MailPlus 高可用性叢集</h3>
+        <ul>
+          <li>準備<b>兩台</b>支援的 Synology NAS,皆安裝 <b>MailPlus Server</b>。</li>
+          <li>在 MailPlus 中建立 <b>High Availability 叢集</b>,指定<b>主伺服器</b>與<b>備援伺服器</b>。</li>
+          <li>完成後兩台<b>即時同步</b>,主伺服器故障時<b>自動切換</b>到備援,降低中斷、最大化服務時間。</li>
+          <li>詳細部署步驟請見影片與下方官方指南。</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_create_a_high_availability_cluster_for_MailPlus_Server" target="_blank" rel="noopener noreferrer">Synology 知識中心:如何建立 MailPlus 高可用叢集</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;高可用性叢集的需求、支援機型與部署方式會因 DSM／MailPlus Server 版本與網路環境而異,實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

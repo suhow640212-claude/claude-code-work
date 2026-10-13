@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synology 不可變快照</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* attack comparison */
+  .vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .lane{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .lane h3{margin:0 0 12px;font-size:1.02rem;font-weight:700;display:flex;align-items:center;gap:8px}
+  .pill{font-size:.74rem;font-weight:700;border-radius:6px;padding:1px 8px}
+  .pill.bad{background:var(--danger-soft);color:var(--danger)}
+  .pill.good{background:var(--accent-soft);color:var(--accent-strong)}
+  .lane ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+  .lane li{counter-increment:s;display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;font-size:.93rem;color:var(--muted)}
+  .lane li::before{content:counter(s);font-family:"IBM Plex Mono",monospace;font-size:.78rem;width:24px;height:24px;border-radius:6px;
+    display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);color:var(--ink);margin-top:2px}
+  .lane li b{color:var(--ink)}
+  .lane li.x b{color:var(--danger)}
+  .lane li.ok b{color:var(--accent-strong)}
+  .result{margin-top:12px;padding:9px 12px;border-radius:9px;font-size:.9rem;font-weight:700}
+  .result.bad{background:var(--danger-soft);color:var(--danger)}
+  .result.good{background:var(--accent-soft);color:var(--accent-strong)}
+
+  /* timeline */
+  .tl{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 16px;box-shadow:var(--shadow)}
+  .tl-bar{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+  .tl-bar span{height:30px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border)}
+  .tl-bar span.p{background:var(--lock);border-color:var(--lock)}
+  .tl-bar span.p:first-child{position:relative}
+  .tl-axis{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:6px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--muted);text-align:center}
+  .tl-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-size:.88rem;color:var(--muted)}
+  .tl-legend span{display:inline-flex;align-items:center;gap:8px}
+  .tl-legend i{width:16px;height:12px;border-radius:3px;display:inline-block}
+  .tl-legend i.p{background:var(--lock)}
+  .tl-legend i.f{background:var(--surface-2);border:1px solid var(--border-strong)}
+  .tl-cap{margin:10px 0 0;font-size:.88rem;color:var(--muted)}
+  .tl-cap b{color:var(--ink)}
+  @media (max-width:520px){ .tl-axis span:nth-child(even){visibility:hidden} .tl-bar span{height:24px} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step p{margin:0;color:var(--muted);font-size:.96rem}
+  .step b{color:var(--ink)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  figure.shot{margin:20px 0 0;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item.w .mk{background:var(--warn)}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--warn);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--warn)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 資料保護 · Snapshot Replication · #不可變快照</p>
+      <h1>Synology Snapshot Replication 不可變快照－預防勒索攻擊刪除快照</h1>
+      <p class="lead">Snapshot Replication 新增的<b>「不可變快照」（Immutable Snapshot）</b>功能，能安全地儲存資料的不可變副本。在設定的保護期間內，快照<b>無法被任何人刪除</b>，即使攻擊者取得管理員憑證，也無法藉由刪除快照來阻止資料還原。</p>
+    </header>
+
+    <!-- why -->
+    <section>
+      <h2><span class="n">01</span>為何需要不可變快照</h2>
+      <p class="sec-sub">一般快照雖能防止檔案被加密覆寫，但快照本身仍可由管理員刪除。新型勒索攻擊常先竊取<b>管理員憑證</b>，刪除所有快照後再加密資料，使受害者無從還原。</p>
+      <div class="vs">
+        <div class="lane">
+          <h3><span class="pill bad">一般快照</span>可被刪除</h3>
+          <ol>
+            <li>攻擊者竊取管理員帳號密碼</li>
+            <li class="x"><b>登入 NAS 並刪除所有快照</b></li>
+            <li>加密共用資料夾中的檔案</li>
+          </ol>
+          <div class="result bad">結果：已無快照可還原</div>
+        </div>
+        <div class="lane">
+          <h3><span class="pill good">不可變快照</span>保護期間內無法刪除</h3>
+          <ol>
+            <li>攻擊者竊取管理員帳號密碼</li>
+            <li class="ok"><b>嘗試刪除快照，遭系統拒絕</b></li>
+            <li>加密共用資料夾中的檔案</li>
+          </ol>
+          <div class="result good">結果：可從不可變快照完整還原</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- period -->
+    <section>
+      <h2><span class="n">02</span>保護期間的運作方式</h2>
+      <p class="sec-sub">每一份不可變快照在建立後，會於<b>保護期間</b>內鎖定，任何帳號皆無法刪除；期間到期後，系統會<b>自動取消</b>不可變狀態，快照即回到一般快照，依保留策略管理。</p>
+      <div class="tl" role="img" aria-label="以保護期間 7 天為例，第 1 至 7 天為保護期，第 8 天起恢復為一般快照">
+        <div class="tl-bar">
+          <span class="p"></span><span class="p"></span><span class="p"></span><span class="p"></span><span class="p"></span><span class="p"></span><span class="p"></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="tl-axis">
+          <span>第1天</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+          <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+        </div>
+        <div class="tl-legend">
+          <span><i class="p"></i>保護期間：無法刪除</span>
+          <span><i class="f"></i>到期後：回到一般快照，依保留策略管理</span>
+        </div>
+        <p class="tl-cap">以保護期間 <b>7 天</b>為例。建議將保護期間設定為 <b>7 至 14 天</b>，讓管理者有足夠時間發現攻擊並完成還原。</p>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">03</span>設定方式</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟快照設定</h3>
+          <p>開啟 <b>Snapshot Replication</b> → <b>快照</b> → <b>共用資料夾</b>，選取要保護的資料夾，按 <b>設定</b>。</p>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>啟動快照排程</h3>
+          <p>於 <b>排程</b> 分頁勾選 <b>啟動快照排程</b>，設定執行日期、開始執行時間與執行頻率。</p>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>勾選不可變快照並設定保護期間</h3>
+          <p>勾選 <b>不可變快照</b>，並於 <b>保護期間</b> 輸入天數（建議 7 至 14 天），完成後按 <b>確定</b>。之後依排程建立的快照皆會受到保護。</p>
+        </div></div>
+      </div>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/no-change-snapshot.jpg" alt="Snapshot Replication 快照設定排程分頁，勾選啟動快照排程與不可變快照，保護期間設為 7 天"><figcaption>快照設定 → 排程：勾選「不可變快照」，保護期間設為 7 天。</figcaption></figure>
+      <div class="callout">
+        <h3>注意</h3>
+        <p>一旦選取不可變快照後，<b>便無法取消選取</b>。系統會在保護期間到期時，自動取消選取此選項。設定前請確認保護期間的天數。</p>
+      </div>
+    </section>
+
+    <!-- notes -->
+    <section>
+      <h2><span class="n">04</span>規劃建議</h2>
+      <div class="notes">
+        <div class="note-item w"><span class="mk"></span><p><b>預留儲存空間：</b>保護期間內的快照無法刪除，其占用的空間也無法釋放。請依資料變動量預留足夠容量，避免儲存空間不足。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>保護期間不宜過短或過長：</b>過短可能來不及發現攻擊；過長則會累積大量無法刪除的快照。7 至 14 天可兼顧防護與空間管理。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>搭配其他防護措施：</b>建議同時啟用帳號雙重驗證（2FA）、停用預設 admin 帳號，並搭配 Replication 將快照複寫至異地 NAS，建立多層防護。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/snapshot_replication" target="_blank" rel="noopener noreferrer">Synology：Snapshot Replication 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；不可變快照須使用支援 Btrfs 的 Synology NAS，並更新至支援此功能的 DSM 與 Snapshot Replication 版本。實際功能與畫面請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

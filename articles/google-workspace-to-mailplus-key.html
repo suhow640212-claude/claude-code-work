@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Google Workspace 移轉金鑰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* roadmap */
+  .road{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;margin-top:20px;align-items:stretch}
+  .rn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
+  .rn .k{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--accent-strong);font-weight:500}
+  .rn b{font-size:.98rem}
+  .rn span{font-size:.84rem;color:var(--muted);line-height:1.55}
+  .rn.next{background:var(--surface-2);border-style:dashed}
+  .rn.next .k{color:var(--muted)}
+  .ra{align-self:center;color:var(--accent-strong);font-weight:800;font-size:1.2rem}
+  @media (max-width:640px){ .road{grid-template-columns:1fr} .ra{transform:rotate(90deg);justify-self:center} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step p,.step .bd{margin:0 0 4px;color:var(--muted);font-size:.96rem}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--accent-strong)}
+  .step ul{margin:6px 0 0;padding-left:1.2em}
+  .step li{margin:0 0 4px}
+  figure.shot{margin:12px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;max-height:520px;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .apis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:10px}
+  .apis span{display:flex;align-items:center;gap:8px;background:var(--lock-soft);border-radius:9px;padding:7px 10px;font-family:"IBM Plex Mono",monospace;font-size:.84rem;color:var(--lock);font-weight:500}
+  .apis i{font-style:normal;width:20px;height:20px;border-radius:5px;background:var(--lock);color:#fff;display:grid;place-items:center;font-size:.72rem;flex:none}
+
+  .scope{margin-top:10px;background:#17232e;border-radius:10px;padding:12px 14px}
+  .scope .sl{display:block;color:#9aabb8;font-size:.76rem;margin-bottom:6px}
+  .scope code{display:block;color:#a9efe5 !important;font-size:.8rem !important;line-height:1.7;word-break:break-all;user-select:all;-webkit-user-select:all}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--warn);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--warn)}
+  .callout ul{margin:0;padding-left:1.2em;color:var(--muted);font-size:.94rem}
+  .callout li{margin:0 0 6px}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Google Workspace 移轉 · 金鑰篇</p>
+      <h1>Google Workspace to Synology MailPlus Server 無痛移轉工具－金鑰篇</h1>
+      <p class="lead">Synology MailPlus Server 內建 <b>5 個免費帳號授權</b>，並提供移轉工具，協助您將 Google Workspace 的郵件、聯絡人與行事曆轉移至 MailPlus。轉移前須先向 Google 取得<b>服務金鑰</b>授權存取，本篇說明取得金鑰的完整步驟，依序操作即可完成。</p>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>流程概覽</h2>
+      <div class="road">
+        <div class="rn"><span class="k">PART 1</span><b>設定 Drive SDK API</b><span>於 Google 管理控制台允許 Drive SDK 存取</span></div>
+        <span class="ra" aria-hidden="true">→</span>
+        <div class="rn"><span class="k">PART 2</span><b>建立服務金鑰並授權</b><span>建立專案、啟用 API、產生 JSON 金鑰並委派全網域權限</span></div>
+        <span class="ra" aria-hidden="true">→</span>
+        <div class="rn next"><span class="k">NEXT</span><b>執行轉移</b><span>於 MailPlus 使用 JSON 金鑰執行轉移</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">01</span>設定 Drive SDK API</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>登入 Google 管理控制台</h3>
+          <p>使用欲轉移網域的管理員帳號登入 <a href="https://admin.google.com/" target="_blank" rel="noopener noreferrer">Google 管理控制台</a>，按一下 <b>應用程式</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-1.jpg" alt="Google 管理控制台首頁，紅框標示應用程式"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>前往 Google Workspace</h3>
+          <p><b>應用程式 › Google Workspace</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-2.jpg" alt="應用程式頁面，紅框標示 Google Workspace"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>按一下雲端硬碟與文件</h3>
+          <p>於服務清單中按一下 <b>雲端硬碟與文件</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-3.jpg" alt="Google Workspace 服務清單，紅框標示雲端硬碟與文件"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>按一下功能和應用程式</h3>
+          <p>按一下 <b>功能和應用程式</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-4.jpg" alt="雲端硬碟與文件設定頁，紅框標示功能和應用程式"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>允許 Drive SDK API 存取</h3>
+          <p>點擊 <b>雲端硬碟 SDK</b> 區塊，勾選 <b>允許使用者透過 Drive SDK API 存取 Google 雲端硬碟</b>，按一下 <b>儲存</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-5.jpg" alt="雲端硬碟 SDK 區塊，勾選允許使用者透過 Drive SDK API 存取 Google 雲端硬碟"></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">02</span>建立服務金鑰</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>登入 Google API Console</h3>
+          <p>以網域<b>超級管理員</b>身分登入 <a href="https://console.developers.google.com/" target="_blank" rel="noopener noreferrer">Google API Console</a>（Google Cloud Platform）。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-6.jpg" alt="Google Cloud Platform 首頁，紅框標示專案選擇器"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>新增專案</h3>
+          <p>按一下 <b>選取專案</b>，再按一下彈出視窗右上角的 <b>新增專案</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-7.jpg" alt="選取專案視窗，紅框標示新增專案"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>輸入專案名稱</h3>
+          <p>輸入專案名稱（範例 <code>MailPlus</code>），按一下 <b>建立</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-8.jpg" alt="新增專案頁面，專案名稱 MailPlus"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>開啟專案</h3>
+          <p>從右上角的 <b>通知</b> 開啟新建立的專案。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-9.jpg" alt="右上角通知中開啟 MailPlus 專案"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>前往 API 程式庫</h3>
+          <p>按一下導覽選單，前往 <b>API 和服務 › 程式庫</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-10.jpg" alt="導覽選單 API 和服務，紅框標示程式庫"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">6</span><div>
+          <h3>啟用所需 API</h3>
+          <p>於搜尋欄搜尋並<b>逐一啟用</b>下方列出的 6 個 API。</p><div class="apis"><span><i>1</i>Admin SDK API</span><span><i>2</i>Google People API</span><span><i>3</i>Gmail API</span><span><i>4</i>Google Calendar API</span><span><i>5</i>Google Drive API</span><span><i>6</i>Tasks API</span></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-11.jpg" alt="API 程式庫搜尋欄"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">7</span><div>
+          <h3>前往服務帳戶</h3>
+          <p>按一下導覽選單，前往 <b>IAM 與管理 › 服務帳戶</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-12.jpg" alt="IAM 與管理選單，紅框標示服務帳戶"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">8</span><div>
+          <h3>建立服務帳戶</h3>
+          <p>按一下 <b>＋ 建立服務帳戶</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-13.jpg" alt="服務帳戶頁面，紅框標示建立服務帳戶"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">9</span><div>
+          <h3>輸入服務帳戶名稱</h3>
+          <p>輸入服務帳戶名稱（範例 <code>MailPlus</code>），按一下 <b>建立並繼續</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-14.jpg" alt="建立服務帳戶，服務帳戶名稱 MailPlus"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">10</span><div>
+          <h3>指定角色</h3>
+          <p>角色選擇 <b>Project › 擁有者</b>，按一下 <b>繼續</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-15.jpg" alt="選取角色 Project 擁有者"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">11</span><div>
+          <h3>完成建立</h3>
+          <p>略過選填項目，按一下 <b>完成</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-16.jpg" alt="略過選填項目，紅框標示完成"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">12</span><div>
+          <h3>管理金鑰</h3>
+          <p>頁面會自動跳轉至服務帳戶清單。找到新建的帳戶，按一下 <b>動作</b> 下方的 <b>⋮</b>，選擇 <b>管理金鑰</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-17.jpg" alt="服務帳戶清單，動作選單中的管理金鑰"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">13</span><div>
+          <h3>建立新的金鑰</h3>
+          <p>按一下 <b>新增金鑰 › 建立新的金鑰</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-18.jpg" alt="金鑰頁籤，新增金鑰下拉選單中的建立新的金鑰"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">14</span><div>
+          <h3>選擇 JSON 金鑰類型</h3>
+          <p>於彈出視窗中選擇 <b>JSON</b> 作為金鑰類型，按一下 <b>建立</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-19.jpg" alt="建立私密金鑰，金鑰類型選擇 JSON"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">15</span><div>
+          <h3>儲存金鑰檔案</h3>
+          <p>金鑰檔案會自動下載至您的電腦，按一下 <b>關閉</b>。<b>此檔案即為轉移時使用的服務金鑰，請妥善保存。</b></p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-20.jpg" alt="已將私密金鑰儲存至您的電腦"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">16</span><div>
+          <h3>複製專屬 ID</h3>
+          <p>前往 <b>詳細資料</b> 頁籤，將 <b>專屬 ID</b> 複製到記事本，稍後的步驟會使用。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-21.jpg" alt="服務帳戶詳細資料，紅框標示專屬 ID"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">17</span><div>
+          <h3>前往 API 控制項</h3>
+          <p>使用欲轉移網域的管理員帳號登入 <a href="https://admin.google.com/" target="_blank" rel="noopener noreferrer">Google 管理控制台</a>，前往 <b>安全性 › 存取權與資料控管 › API 控制項</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-22.jpg" alt="Google 管理控制台安全性，紅框標示 API 控制項"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">18</span><div>
+          <h3>管理全網域委派設定</h3>
+          <p>按一下頁面底部的 <b>管理全網域委派設定</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-23.jpg" alt="API 控制項頁面底部，紅框標示管理全網域委派設定"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">19</span><div>
+          <h3>新增用戶端 ID</h3>
+          <p>按一下 <b>新增</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-24.jpg" alt="全網域委派頁面，新增按鈕"></figure>
+        </div></div>
+        <div class="step"><span class="bullet">20</span><div>
+          <h3>授權用戶端 ID 與 OAuth 範圍</h3>
+          <div class="bd">於彈出視窗輸入以下資訊，按一下 <b>授權</b>：<ul><li><b>用戶端 ID</b>：貼上步驟 16 複製的專屬 ID。</li><li><b>OAuth 範圍</b>：貼上下方的完整內容。</li></ul><div class="scope"><span class="sl">OAuth 範圍（請完整複製）</span><code>https://www.googleapis.com/auth/admin.directory.user, https://www.googleapis.com/auth/admin.directory.domain.readonly, https://www.googleapis.com/auth/drive, https://mail.google.com, https://www.googleapis.com/auth/calendar, https://www.googleapis.com/auth/contacts, https://www.googleapis.com/auth/contacts.other.readonly, https://sites.google.com/feeds, https://www.googleapis.com/auth/tasks</code></div></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-to-mailplus-25.jpg" alt="新增用戶端 ID 視窗，輸入用戶端 ID 與 OAuth 範圍，紅框標示授權"></figure>
+        </div></div>
+      </div>
+      <p class="sec-sub" style="margin-top:18px">完成後，即可使用步驟 15 下載至電腦的 <b>JSON 金鑰</b>，於 MailPlus 執行 Google Workspace 轉移。</p>
+      <div class="callout">
+        <h3>注意事項</h3>
+        <ul>
+          <li>建議為轉移任務建立<b>專屬的專案</b>，以確保隱私安全。</li>
+          <li>此金鑰可用來存取網域中<b>所有使用者的資料</b>，請建立副本並妥善保管。</li>
+          <li>專屬 ID 用於將全網域權限委派給服務帳戶。</li>
+          <li>MailPlus Server 使用 Google OAuth 2.0 認證，無須收集所有使用者的密碼即可轉移郵件；使用者清單中的來源帳號須為<b>完整網域地址（FQDA）</b>，例如 user@example.com。</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_obtain_authorization_from_Google_for_migrating_emails_from_G_Suite" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何自 Google Workspace 取得服務金鑰以進行轉移？</a>
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Google_Workspace_migration_guide" target="_blank" rel="noopener noreferrer">Synology 知識中心：將 Google Workspace 的組織資料轉移至 Synology MailPlus、Contacts、Calendar</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；Google 管理控制台與 Google Cloud 的介面可能隨時更新，實際請以 Google 與 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

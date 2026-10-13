@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MailPlus 安全性憑證</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* compare */
+  .vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .lane{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .bar{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:6px 14px;
+    font-family:"IBM Plex Mono",monospace;font-size:.86rem;margin-bottom:12px;overflow:hidden;white-space:nowrap}
+  .bar svg{width:16px;height:16px;flex:none;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .lane.bad .bar svg{stroke:var(--danger)} .lane.good .bar svg{stroke:var(--accent-strong)}
+  .lane.bad .bar .s{color:var(--danger);text-decoration:line-through}
+  .lane.good .bar .s{color:var(--accent-strong)}
+  .lane h3{margin:0 0 6px;font-size:1rem;font-weight:700;display:flex;gap:8px;align-items:center}
+  .pill{font-size:.74rem;font-weight:700;border-radius:6px;padding:1px 8px}
+  .pill.bad{background:var(--danger-soft);color:var(--danger)}
+  .pill.good{background:var(--accent-soft);color:var(--accent-strong)}
+  .lane p{margin:0;color:var(--muted);font-size:.92rem}
+
+  /* services map */
+  .svc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+  .sv{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+  .sv .nm{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.88rem;color:var(--lock);background:var(--lock-soft);border-radius:6px;padding:1px 9px;align-self:flex-start}
+  .sv h3{margin:2px 0 0;font-size:1rem;font-weight:700}
+  .sv p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.65}
+
+  /* prereq */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+  .note-item a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--accent-strong)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:640px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;
+    padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · SSL · #安全性憑證</p>
+      <h1>Synology MailPlus 網址安全性憑證</h1>
+      <p class="lead">Synology MailPlus 提供專屬的<b>網頁郵件</b>與<b>行動 App</b>。為 MailPlus Server 加上安全性憑證後，郵件的收發與存取皆透過 <b>SSL 加密連線</b>，避免帳號密碼與郵件內容在傳輸過程中遭到竊取。</p>
+      <div class="tags"><span>#MailPlus</span><span>#SSL</span><span>#LetsEncrypt</span></div>
+    </header>
+
+    <!-- why -->
+    <section>
+      <h2><span class="n">01</span>為何需要安全性憑證</h2>
+      <div class="vs">
+        <div class="lane bad">
+          <div class="bar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg><span class="s">http</span>://mail.hongku.tw</div>
+          <h3><span class="pill bad">未加密</span>明文傳輸</h3>
+          <p>帳號密碼與郵件內容以明文傳送，瀏覽器會顯示「不安全」警告。</p>
+        </div>
+        <div class="lane good">
+          <div class="bar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="s">https</span>://mail.hongku.tw</div>
+          <h3><span class="pill good">已加密</span>SSL 加密連線</h3>
+          <p>網頁郵件、行動 App 與郵件用戶端皆透過加密連線存取，資料不易被攔截。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- prereq -->
+    <section>
+      <h2><span class="n">02</span>開始之前</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span><p><b>網域名稱已指向 NAS：</b>例如 <b>mail.hongku.tw</b> 須已在 DNS 中建立 A 記錄並指向 NAS 的固定 IP。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>Let's Encrypt 驗證所需連接埠：</b>向 Let's Encrypt 申請憑證時需透過網際網路驗證網域，請確認路由器與防火牆已開放 <b>TCP 80</b> 連接埠至 NAS。</p></div>
+      </div>
+    </section>
+
+    <!-- steps -->
+    <section>
+      <h2><span class="n">03</span>設定步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>新增憑證<span class="path">控制台 › 安全性 › 憑證 › 新增</span></h3>
+          <p>於 <b>控制台 › 安全性</b> 選擇 <b>憑證</b> 頁籤，按 <b>新增</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-1.jpg" alt="DSM 控制台安全性憑證頁籤，列出現有憑證，紅框標示新增按鈕"><figcaption>控制台 › 安全性 › 憑證 › 新增</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>選擇「新增憑證」</h3>
+          <p>於建立憑證精靈中選擇 <b>新增憑證</b>（匯入憑證或從 Let's Encrypt 取得憑證）。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-2.jpg" alt="建立憑證精靈，選擇新增憑證"><figcaption>選擇「新增憑證」。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>選擇從 Let's Encrypt 取得憑證</h3>
+          <p>選擇 <b>從 Let's Encrypt 取得憑證</b>，自動從公開憑證授權機構取得免費、安全的憑證。若已向其他憑證機構購買憑證，則選擇 <b>匯入憑證</b>，匯入私密金鑰、憑證及中繼憑證。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-3.jpg" alt="建立憑證，選擇從 Let's Encrypt 取得憑證"><figcaption>選擇「從 Let's Encrypt 取得憑證」。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>輸入網域名稱與電子郵件</h3>
+          <ul>
+            <li><b>網域名稱</b>：MailPlus 使用的網址，範例 <code>mail.hongku.tw</code>。</li>
+            <li><b>電子郵件</b>：用於註冊憑證，憑證到期等通知會寄至此信箱。</li>
+            <li><b>主體別名</b>：若同一張憑證需涵蓋其他網址，可在此輸入。</li>
+          </ul>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-4.jpg" alt="從 Let's Encrypt 取得憑證，網域名稱 mail.hongku.tw，電子郵件，主體別名"><figcaption>網域名稱輸入 mail.hongku.tw。</figcaption></figure>
+          <div class="warn"><b>注意：</b>依據 Let's Encrypt 規範，用來註冊憑證的電子郵件信箱，以及可為單一網域發出的憑證請求，皆有數量限制。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>確認憑證並開啟設定</h3>
+          <p>完成後，憑證清單中會出現 <b>mail.hongku.tw</b>，可查看核發單位與主體別名。接著按 <b>設定</b>，指定各項服務使用的憑證。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-5.jpg" alt="憑證清單出現 mail.hongku.tw，核發單位 R3，紅框標示設定按鈕"><figcaption>新憑證 mail.hongku.tw 已加入清單 → 設定。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">6</span><div>
+          <h3>將 MailPlus 相關服務指定使用新憑證</h3>
+          <p>於服務清單中，將下列三項服務的憑證皆設為 <b>mail.hongku.tw</b>，按 <b>確定</b> 完成：</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/ssl-6.jpg" alt="憑證設定，MailClient-7701、MailPlus-Server-dovecot、MailPlus-Server-postfix 三項服務的憑證設為 mail.hongku.tw"><figcaption>MailClient、dovecot、postfix 皆指定 mail.hongku.tw 憑證。</figcaption></figure>
+        </div></div>
+
+      </div>
+
+      <div class="svc">
+        <div class="sv"><span class="nm">MailClient - 7701</span><h3>網頁郵件</h3><p>MailPlus 網頁郵件介面的 HTTPS 連線。</p></div>
+        <div class="sv"><span class="nm">MailPlus-Server-dovecot</span><h3>收信服務</h3><p>郵件用戶端與行動 App 透過 IMAP／POP3 收信時的加密連線。</p></div>
+        <div class="sv"><span class="nm">MailPlus-Server-postfix</span><h3>寄信服務</h3><p>透過 SMTP 寄送郵件時的加密連線。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_enable_HTTPS_and_create_a_certificate_signing_request_on_your_Synology_NAS" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何在 Synology NAS 上啟用 HTTPS 並建立憑證簽署請求</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的網域名稱僅供示意。Let's Encrypt 憑證到期前 DSM 會自動更新，實際功能與畫面請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

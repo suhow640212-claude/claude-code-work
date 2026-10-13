@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HDD Replace 磁碟更換實測</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* vs compare */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+  .vs .col{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px 18px;box-shadow:var(--shadow)}
+  .vs .bad{border-top:4px solid var(--danger)}
+  .vs .good{border-top:4px solid var(--accent)}
+  .vs .lbl{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;
+    text-transform:uppercase;display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;font-weight:500}
+  .vs .bad .lbl{color:var(--danger);background:var(--danger-soft)}
+  .vs .good .lbl{color:var(--accent-strong);background:var(--accent-soft)}
+  .vs h3{margin:0 0 10px;font-size:1.06rem;font-weight:800;line-height:1.4}
+  .vs ul{margin:0;padding-left:1.1em;color:var(--muted);font-size:.92rem;line-height:1.7}
+  .vs li{margin:0 0 6px}
+  .vs li:last-child{margin-bottom:0}
+  .vs b{color:var(--ink)}
+  @media(max-width:560px){.vs{grid-template-columns:1fr}}
+
+  /* callout */
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  /* walkthrough */
+  .walk{display:grid;gap:30px;margin-top:24px}
+  .wstep .wh{display:flex;align-items:baseline;gap:12px;margin:0 0 6px}
+  .wstep .wh .wn{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none;transform:translateY(2px)}
+  .wstep .wh h3{margin:0;font-size:1.1rem;font-weight:800;line-height:1.4}
+  .wstep .wd{margin:0 0 0 40px;color:var(--muted);font-size:.96rem}
+  .wstep .wd b{color:var(--ink)}
+  figure.shot{margin:14px 0 0 40px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.8rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .wstep .wd{margin-left:0}
+    figure.shot{margin-left:0}
+  }
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 儲存空間管理員 · #磁碟更換</p>
+      <h1>Synology HDD Replace 磁碟更換功能實測</h1>
+      <p class="lead">Synology 儲存空間管理員新增了<strong>磁碟更換(Replace Drive)</strong>功能。對於使用時數過長、需要<strong>計劃性汰換</strong>的硬碟,過去只能「拔舊換新再 Rebuild」,風險高又耗時;新功能改以<strong>直接 disk-to-disk 區塊複製</strong>,速度快,而且<strong>全程不會有 RAID 降級的風險</strong>。本文以 DS1618+ 的實測畫面,帶你走完操作流程。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#磁碟更換</span><span>#HDDReplace</span><span>#儲存空間管理員</span><span>#RAID</span>
+      </div>
+    </header>
+
+    <!-- 01 old vs new -->
+    <section>
+      <h2><span class="n">01</span>傳統 Rebuild vs 磁碟更換</h2>
+      <p class="sec-sub">同樣是換上新碟,兩種做法對 RAID 的影響差很多。</p>
+      <div class="vs">
+        <div class="col bad">
+          <span class="lbl">傳統做法</span>
+          <h3>拔除舊碟 → Rebuild</h3>
+          <ul>
+            <li>必須<b>先拔掉</b>要汰換的舊碟</li>
+            <li>RAID 立即進入<b>降級(degraded)</b>狀態</li>
+            <li>重建期間若<b>再壞一顆</b>,就有資料遺失風險</li>
+            <li>Rebuild <b>非常耗時</b></li>
+          </ul>
+        </div>
+        <div class="col good">
+          <span class="lbl">磁碟更換</span>
+          <h3>插新碟 → Disk-to-Disk 區塊複製</h3>
+          <ul>
+            <li>新碟插入<b>空的 tray</b>,舊碟仍在線運作</li>
+            <li>直接做 <b>disk-to-disk block copy</b></li>
+            <li>全程 <b>RAID 不降級</b>、風險低</li>
+            <li>速度<b>快非常多</b></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 walkthrough -->
+    <section>
+      <h2><span class="n">02</span>實測操作:六步驟完成更換</h2>
+      <div class="callout">
+        <h3>實測環境</h3>
+        <ul>
+          <li>機種:<b>DS1618+</b>,使用 DSM 7 的儲存空間管理員</li>
+          <li>儲存集區 1 為<b>雙碟鏡像(RAID 1)</b>,由硬碟 1 與硬碟 6 組成</li>
+          <li>先將新硬碟裝入空 tray(硬碟 4),再以它<b>置換硬碟 1</b></li>
+        </ul>
+      </div>
+
+      <div class="walk">
+        <div class="wstep">
+          <div class="wh"><span class="wn">1</span><h3>開啟「管理可用硬碟」</h3></div>
+          <p class="wd">進入<b>儲存空間管理員 → HDD/SSD</b>,確認新碟(硬碟 4)已被偵測,點上方工具列的<b>「管理可用硬碟」</b>。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace1.jpg" alt="儲存空間管理員 HDD/SSD 頁面，點選上方的「管理可用硬碟」">
+            <figcaption>HDD/SSD 頁面 →「管理可用硬碟」。</figcaption>
+          </figure>
+        </div>
+
+        <div class="wstep">
+          <div class="wh"><span class="wn">2</span><h3>選擇「更換硬碟」</h3></div>
+          <p class="wd">系統偵測到未使用的硬碟後,於選單中選擇<b>「更換硬碟」</b>(而非新增硬碟或變更 RAID)。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace2.jpg" alt="管理可用硬碟對話框，選擇「更換硬碟」">
+            <figcaption>在「管理可用硬碟」中選擇「更換硬碟」。</figcaption>
+          </figure>
+        </div>
+
+        <div class="wstep">
+          <div class="wh"><span class="wn">3</span><h3>選擇要更換硬碟的儲存集區</h3></div>
+          <p class="wd">選擇要進行更換的<b>儲存集區</b>(此例為<b>儲存集區 1</b>),按「下一步」。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace3.jpg" alt="更換硬碟精靈，選擇儲存集區 1">
+            <figcaption>選擇要更換硬碟的儲存集區(儲存集區 1)。</figcaption>
+          </figure>
+        </div>
+
+        <div class="wstep">
+          <div class="wh"><span class="wn">4</span><h3>選擇要移除的硬碟</h3></div>
+          <p class="wd">從集區現有硬碟中,選出要<b>汰換的舊碟</b>(此例選<b>硬碟 1</b>);它會在更換完成後移出集區。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace4.jpg" alt="選擇要移除的硬碟，選取硬碟 1">
+            <figcaption>選擇要移除(汰換)的硬碟:硬碟 1。</figcaption>
+          </figure>
+        </div>
+
+        <div class="wstep">
+          <div class="wh"><span class="wn">5</span><h3>選擇要加入的新硬碟</h3></div>
+          <p class="wd">選擇要加入集區的<b>新硬碟</b>(此例為<b>硬碟 4</b>),系統會顯示更換後的估計容量。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace5.jpg" alt="選擇要加入的硬碟，選取硬碟 4">
+            <figcaption>選擇要加入的新硬碟:硬碟 4。</figcaption>
+          </figure>
+        </div>
+
+        <div class="wstep">
+          <div class="wh"><span class="wn">6</span><h3>檢查設定並套用</h3></div>
+          <p class="wd">確認摘要——<b>被更換的硬碟:硬碟 1</b>、<b>新加入的硬碟:硬碟 4</b>——無誤後按<b>「套用」</b>。系統即開始 disk-to-disk 區塊複製,過程中 RAID 維持正常、不需 Rebuild。</p>
+          <figure class="shot">
+            <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/hdd-replace6.jpg" alt="再次檢查設定：被更換的硬碟 硬碟 1、新加入的硬碟 硬碟 4，按套用">
+            <figcaption>再次檢查設定(硬碟 1 → 硬碟 4)後按「套用」。</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><b>重點:</b>整個過程舊碟仍在線,系統以區塊複製把資料搬到新碟,<b>RAID 全程不降級</b>、也不需傳統的 Rebuild,兼顧速度與安全。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm" target="_blank" rel="noopener noreferrer">Synology DSM(DiskStation Manager)介紹</a>
+      </div>
+      <p class="note">※ 本文為實測整理;是否支援磁碟更換、所需空 tray 與操作介面會因機種、DSM 版本與儲存集區類型而異,實際請以 Synology 官方文件與你的環境為準。進行硬碟更換前,仍建議先完成重要資料備份。</p>
+    </footer>
+  </main>
+</body>
+</html>

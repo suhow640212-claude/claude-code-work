@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secure SignIn 無密碼登入</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* phone mockup */
+  .phone{max-width:286px;margin:26px auto 0;background:#121c24;border-radius:34px;padding:10px;
+    box-shadow:0 20px 44px rgba(20,35,46,.24);border:1px solid #2a3a46}
+  .phone .scr{background:var(--surface);border-radius:26px;overflow:hidden}
+  .phone .bar{height:28px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+  .phone .bar i{display:block;width:62px;height:7px;border-radius:999px;background:#c3ccd4}
+  .phone .body{padding:20px 18px 22px}
+  .phone .app{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .phone .app .lg{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+  .phone .app .lg svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .phone .app .an{font-weight:800;font-size:.98rem;line-height:1.2}
+  .phone .app .as{font-size:.68rem;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+  .phone .ttl{font-weight:800;font-size:1.04rem;margin:0 0 13px}
+  .phone .rows{display:grid;gap:9px;margin-bottom:17px}
+  .phone .row{display:flex;justify-content:space-between;font-size:.84rem;gap:10px}
+  .phone .row .k{color:var(--muted);flex:none}
+  .phone .row .v{color:var(--ink);font-weight:600;text-align:right}
+  .phone .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .phone .b{text-align:center;padding:11px;border-radius:11px;font-weight:700;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:6px}
+  .phone .b.ok{background:var(--accent);color:#fff}
+  .phone .b.ok svg{width:15px;height:15px;stroke:#fff;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .phone .b.no{background:var(--surface);border:1px solid var(--border-strong);color:var(--muted)}
+  .phone-cap{margin:14px auto 0;max-width:52ch;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology DSM · 帳號安全 · #SecureSignIn</p>
+      <h1>Synology Secure SignIn:無密碼,手機 App 核准登入 DSM</h1>
+      <p class="lead">Synology <strong>Secure SignIn</strong> 為 DSM 帳號多加一道安全防護:登入時改由<strong>手機 App 核准</strong>,全程<strong>無需輸入密碼</strong>——沒有密碼可被側錄、竊取或釣魚,只有持有手機的你能核准這次登入。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#SecureSignIn</span><span>#無密碼登入</span><span>#DSM</span><span>#帳號安全</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/DNHcePhPq6s"
+        title="Synology Secure SignIn 無密碼 手機 App 核准登入 DSM"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology Secure SignIn － 無密碼、手機 App 核准登入 DSM</b>　·　<a href="https://youtu.be/DNHcePhPq6s" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- phone mockup -->
+    <div class="phone" role="img" aria-label="手機上的 Secure SignIn App 收到登入核准要求,提供核准與拒絕兩個選項。">
+      <div class="scr">
+        <div class="bar"><i></i></div>
+        <div class="body">
+          <div class="app">
+            <span class="lg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9.3 12l1.9 1.9 3.6-3.7"/></svg></span>
+            <div><div class="an">Secure SignIn</div><div class="as">登入核准</div></div>
+          </div>
+          <p class="ttl">有一個新的登入要求</p>
+          <div class="rows">
+            <div class="row"><span class="k">帳號</span><span class="v">admin</span></div>
+            <div class="row"><span class="k">裝置</span><span class="v">Windows · Chrome</span></div>
+            <div class="row"><span class="k">時間</span><span class="v">剛剛</span></div>
+          </div>
+          <div class="btns">
+            <span class="b ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>核准</span>
+            <span class="b no">拒絕</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="phone-cap">登入時,手機上的 Secure SignIn App 會收到核准要求,輕點「核准」即可登入,全程免輸入密碼。</p>
+
+    <!-- 01 flow -->
+    <section>
+      <h2><span class="n">01</span>登入流程</h2>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span>
+          <p class="ttl">輸入帳號登入</p>
+          <p class="ds">在 DSM 登入頁輸入帳號,免打密碼</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span>
+          <p class="ttl">手機收到核准要求</p>
+          <p class="ds">Secure SignIn App 立即推播通知</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>
+          <p class="ttl">點「核准」登入</p>
+          <p class="ds">輕點核准,即完成登入 DSM</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 why safer -->
+    <section>
+      <h2><span class="n">02</span>為什麼更安全</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>無密碼登入:</b>不必輸入密碼,也就沒有密碼可被側錄、外洩或釣魚盜用。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>手機核准:</b>唯有持有你手機、能通過手機解鎖的人才能核准,等於多一道實體關卡。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>可作為額外防護:</b>也能搭配既有密碼,作為登入的兩步驟驗證(2FA)。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>多種驗證方式:</b>除了手機核准,Secure SignIn 也支援 OTP 一次性驗證碼與硬體安全金鑰。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm" target="_blank" rel="noopener noreferrer">Synology DSM(DiskStation Manager)介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;Secure SignIn 的可用驗證方式(手機核准、OTP、安全金鑰)、設定與支援情形會因 DSM 版本與帳號設定而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

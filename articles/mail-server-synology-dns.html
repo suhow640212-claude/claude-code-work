@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail Server 基礎：Synology DNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+  code,.mono{font-family:"IBM Plex Mono",monospace;font-size:.88em;color:var(--accent-strong)}
+
+  /* checklist */
+  .checks{display:grid;gap:12px;margin-top:20px}
+  .ck{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+  .ck .box{width:26px;height:26px;border-radius:7px;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent-strong);margin-top:2px}
+  .ck .box svg{width:15px;height:15px;stroke:currentColor;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .ck h3{margin:0 0 3px;font-size:1rem;font-weight:700}
+  .ck p{margin:0;color:var(--muted);font-size:.93rem}
+  .ck b{color:var(--ink)}
+  .port{display:inline-flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .port span{font-family:"IBM Plex Mono",monospace;font-size:.8rem;font-weight:500;background:var(--lock-soft);color:var(--lock);border-radius:6px;padding:1px 9px}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--ink)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  /* field table */
+  .fields{display:grid;gap:0;margin-top:4px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-weight:700;font-size:.9rem}
+  .fd .v{color:var(--muted);font-size:.9rem}
+  .fd .v b{color:var(--ink)}
+  .fd .ex{display:inline-block;margin-top:3px;font-family:"IBM Plex Mono",monospace;font-size:.8rem;background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;padding:0 8px;color:var(--accent-strong)}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  /* record types */
+  .rtypes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:20px}
+  .rt{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .rt .ty{display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.95rem;border-radius:7px;padding:1px 10px;margin-bottom:6px}
+  .rt .auto{font-size:.72rem;font-weight:700;color:var(--accent-strong);background:var(--accent-soft);border-radius:6px;padding:0 7px;margin-left:6px;vertical-align:2px}
+  .rt .add{font-size:.72rem;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 7px;margin-left:6px;vertical-align:2px}
+  .rt h3{margin:0 0 4px;font-size:.98rem;font-weight:700}
+  .rt p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .rt .map{margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:.78rem;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--ink);word-break:break-all}
+  .t-ns{background:var(--lock-soft);color:var(--lock)}
+  .t-a{background:var(--accent-soft);color:var(--accent-strong)}
+  .t-soa{background:#ece8f6;color:#5b4a9a}
+  .t-cn{background:var(--surface-2);color:var(--ink);border:1px solid var(--border-strong)}
+  .t-mx{background:var(--danger-soft);color:var(--danger)}
+  .rt.mx{border:2px solid var(--danger)}
+
+  /* zone table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:20px;background:var(--surface)}
+  table.zone{width:100%;border-collapse:collapse;font-size:.88rem;min-width:540px}
+  .zone th,.zone td{padding:9px 14px;border-bottom:1px solid var(--border);text-align:left}
+  .zone thead th{background:var(--surface-2);font-size:.8rem;color:var(--muted);font-weight:700}
+  .zone td{font-family:"IBM Plex Mono",monospace;font-size:.84rem}
+  .zone td.d{font-family:inherit;font-size:.84rem;color:var(--muted)}
+  .zone tr.mx td{background:#fdf3f1}
+  .zone tbody tr:last-child td{border-bottom:0}
+  .zone .ty{font-weight:500;border-radius:5px;padding:0 7px}
+
+  figure.shot{margin:16px 0 2px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;max-width:760px;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--danger);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--danger)}
+  .callout p{margin:0 0 10px;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Mail Server 基礎 · 2 · #DNS Server</p>
+      <h1>MAIL SERVER 基礎 2：以 Synology 建立 DNS</h1>
+      <p class="lead">透過 <b>Synology DNS Server</b> 套件，可讓 Synology NAS 成為私人的網域名稱伺服器，提供網域名稱解析服務並全面控管網域的 DNS 記錄。本文介紹 Synology DNS Server 的基礎知識，並逐步完成<b>轄區建立</b>及<b>資源記錄</b>設定。</p>
+      <div class="tags"><span>#MailPlus</span><span>#DNS</span></div>
+    </header>
+
+    <!-- prep -->
+    <section>
+      <h2><span class="n">01</span>開始進行之前的準備</h2>
+      <p class="sec-sub">設定 DNS Server 前，請確認已完成下列事項：</p>
+      <div class="checks">
+        <div class="ck"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div>
+          <h3>安裝 DNS Server</h3>
+          <p>登入 DSM，前往 <b>套件中心</b> 安裝並執行 <b>Synology DNS Server</b> 套件。</p>
+        </div></div>
+        <div class="ck"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div>
+          <h3>取得固定且公開的 IP 位址</h3>
+          <p>若要提供公開的 DNS 服務，必須為 Synology NAS 取得固定 IP 位址，請向網際網路服務供應商申請固定 IP 網路。</p>
+        </div></div>
+        <div class="ck"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div>
+          <h3>註冊網域名稱</h3>
+          <p>註冊方式已於前一單元〈Mail Server 基礎 1：DNS Server〉說明。</p>
+        </div></div>
+        <div class="ck"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div>
+          <h3>檢查防火牆及埠轉送設定</h3>
+          <p>DNS 服務需要使用連接埠 53。若 Synology NAS 有使用防火牆，必須開啟此連接埠；若 NAS 透過路由器連接至網際網路，請設定埠轉送規則並開啟連接埠 53。</p>
+          <div class="port"><span>TCP 53</span><span>UDP 53</span></div>
+        </div></div>
+        <div class="ck"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div>
+          <h3>向網域名稱供應商註冊裝置</h3>
+          <p>向網域名稱供應商登記 Synology NAS 的 IP 位址及其他所需資訊，並將管理模式設定為<b>「自管」</b>，設定方式已於前一單元說明。</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- master zone -->
+    <section>
+      <h2><span class="n">02</span>建立 Master 轄區</h2>
+      <p class="sec-sub"><b>Master 轄區</b>儲存一或多個 DNS 網域的名稱資訊，並作為權威來源，提供轄區內所有 DNS 網域名稱的相關資訊。以下以網域名稱 <code>hongku.tw</code> 為例：</p>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>新增 Master 轄區<span class="path">DNS Server › 轄區管理 › 新增 › Master 轄區</span></h3>
+          <p>開啟 DNS Server 並前往 <b>轄區管理</b> 頁籤，按 <b>新增</b> 並選擇 <b>Master 轄區</b>。</p>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>編輯轄區設定</h3>
+          <div class="fields">
+            <div class="fd"><span class="k">網域類型</span><span class="v">選擇 <b>正向網域</b>，執行從網域名稱到 IP 位址的解析服務。</span></div>
+            <div class="fd"><span class="k">完整網域名稱</span><span class="v">輸入已註冊的網域名稱。<br><span class="ex">hongku.tw</span></span></div>
+            <div class="fd"><span class="k">主 DNS 伺服器</span><span class="v">輸入 ISP 提供的公開固定 IP 位址。訪客向 DNS Server 查詢上述網域名稱時，將被導向此 IP 位址。<br><span class="ex">114.34.160.46</span></span></div>
+            <div class="fd"><span class="k">序號格式</span><span class="v">選擇轄區記錄的序號格式：<b>整數</b>（0～4294967295）或 <b>日期</b>（YYYYMMDDNN，例如 2015043001）。</span></div>
+          </div>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>儲存設定</h3>
+          <p>按 <b>確定</b> 儲存設定，新建立的 Master 轄區會出現在 <b>轄區管理</b> 頁籤中。</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- records -->
+    <section>
+      <h2><span class="n">03</span>資源記錄</h2>
+      <p class="sec-sub">建立 Master 轄區時，DNS Server 會<b>自動建立三種資源記錄</b>；其他記錄則可依需求自行新增。架設郵件伺服器時，<b>MX 記錄為必要設定</b>。</p>
+      <div class="rtypes">
+        <div class="rt">
+          <span class="ty t-ns">NS</span><span class="auto">自動建立</span>
+          <h3>名稱伺服器記錄</h3>
+          <p>辨別您提供給註冊機構或 DNS 服務的網域名稱伺服器，讓查詢能傳送至您的 Synology NAS。</p>
+          <div class="map">hongku.tw → dns1.hongku.tw</div>
+        </div>
+        <div class="rt">
+          <span class="ty t-a">A</span><span class="auto">自動建立</span>
+          <h3>主機資源記錄</h3>
+          <p>將網域名稱對應到一組 IP 位址。</p>
+          <div class="map">dns1.hongku.tw → 114.34.160.46</div>
+        </div>
+        <div class="rt">
+          <span class="ty t-soa">SOA</span><span class="auto">自動建立</span>
+          <h3>起始授權記錄</h3>
+          <p>記載此轄區的權威資訊，例如主要名稱伺服器與轄區序號。</p>
+        </div>
+        <div class="rt">
+          <span class="ty t-a">A</span><span class="add">依需求新增</span>
+          <h3>網站主機記錄（www）</h3>
+          <p>建立名稱為 www 的 A 記錄，訪客輸入 www.hongku.tw 時即可造訪您的網站。</p>
+          <div class="map">www.hongku.tw → 網站 IP 位址</div>
+        </div>
+        <div class="rt">
+          <span class="ty t-cn">CNAME</span><span class="add">依需求新增</span>
+          <h3>別名記錄</h3>
+          <p>將一個名稱指向另一個名稱，查詢別名時會被導向正式名稱。</p>
+          <div class="map">別名 → www.hongku.tw</div>
+        </div>
+        <div class="rt mx">
+          <span class="ty t-mx">MX</span><span class="add">郵件伺服器必要</span>
+          <h3>郵件交換記錄</h3>
+          <p>指定負責接收此網域郵件的伺服器，外部寄給 @hongku.tw 的郵件才能正確送達。</p>
+          <div class="map">hongku.tw → 5 hongku.tw</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- add MX -->
+    <section>
+      <h2><span class="n">04</span>建立資源記錄：新增 MX 記錄</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟編輯資源記錄<span class="path">轄區管理 › 選擇轄區 › 編輯 › 資源記錄</span></h3>
+          <p>選擇轄區，按 <b>編輯</b> 並選擇 <b>資源記錄</b>；於 <b>編輯資源記錄</b> 視窗中按 <b>新增</b>，選擇要新增的記錄類型。</p>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>輸入 MX 記錄資訊</h3>
+          <div class="fields">
+            <div class="fd"><span class="k">名稱</span><span class="v">為資源記錄輸入名稱；若留白，其名稱與網域名稱相同。</span></div>
+            <div class="fd"><span class="k">TTL</span><span class="v">設定資源記錄存在於其他網域名稱伺服器快取中的時間。<br><span class="ex">3600</span></span></div>
+            <div class="fd"><span class="k">正規名稱</span><span class="v">輸入網域名稱，即完成郵件轉址設定。<br><span class="ex">hongku.tw</span></span></div>
+          </div>
+        </div></div>
+      </div>
+
+      <p class="sec-sub" style="margin-top:22px">郵件伺服器所需的 A 記錄與 MX 記錄如下：</p>
+      <div class="tablewrap">
+        <table class="zone">
+          <thead><tr><th>名稱</th><th>種類</th><th>TTL</th><th>資訊</th></tr></thead>
+          <tbody>
+            <tr><td>hongku.tw.</td><td><span class="ty t-a">A</span></td><td>3600</td><td>114.34.160.46</td></tr>
+            <tr class="mx"><td>hongku.tw.</td><td><span class="ty t-mx">MX</span></td><td>3600</td><td>5 hongku.tw.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/synology-dns-server.jpg" alt="DNS Server 編輯資源紀錄視窗，列出 hongku.tw 的 NS、A、MX 與 TXT 記錄"><figcaption>Synology DNS Server - 編輯資源記錄範例</figcaption></figure>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_set_up_your_domain_with_Synology_DNS_Server" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何使用 Synology DNS Server 設定網域</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的網域名稱與 IP 位址僅供示意，實際請依您的網域與網路環境設定，並以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

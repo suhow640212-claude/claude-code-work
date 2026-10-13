@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active Insight 集中監控</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --ok:#2f8f5b; --ok-soft:#e3f3ea;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* dashboard mockup */
+  .dash{margin-top:24px;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+  .dash .dh{display:flex;align-items:center;gap:11px;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+  .dash .dh .lg{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+  .dash .dh .lg svg{width:19px;height:19px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .dash .dh .t{font-weight:800;font-size:1rem}
+  .dash .dh .c{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--muted)}
+  .drow{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .drow:last-child{border-bottom:0}
+  .drow .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+  .drow .ic svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .drow .nm{font-weight:700;font-size:.95rem;line-height:1.3}
+  .drow .nm small{display:block;font-weight:500;color:var(--muted);font-size:.72rem;font-family:"IBM Plex Mono",monospace;margin-top:1px}
+  .drow .meta{text-align:right}
+  .drow .st{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.78rem;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .drow .st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .st.ok{background:var(--ok-soft);color:var(--ok)}
+  .st.warn{background:var(--warn-soft);color:var(--warn)}
+  .drow .mn{display:block;font-size:.72rem;color:var(--muted);margin-top:3px;font-family:"IBM Plex Mono",monospace}
+  .dash-cap{padding:12px 16px;background:var(--surface-2);border-top:1px solid var(--border);font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  /* plans */
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+  .plan{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 18px;box-shadow:var(--shadow)}
+  .plan.free{border-top:4px solid var(--ok)}
+  .plan.prem{border-top:4px solid var(--accent)}
+  .plan .plbl{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
+    display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;font-weight:500}
+  .plan.free .plbl{color:var(--ok);background:var(--ok-soft)}
+  .plan.prem .plbl{color:var(--accent-strong);background:var(--accent-soft)}
+  .plan .pp{margin:0 0 10px;font-weight:800;font-size:1.02rem;color:var(--ink)}
+  .plan ul{margin:0;padding-left:1.1em;color:var(--muted);font-size:.93rem;line-height:1.7}
+  .plan li{margin:0 0 6px}
+  .plan li:last-child{margin-bottom:0}
+  .plan b{color:var(--ink)}
+  @media(max-width:560px){.plans{grid-template-columns:1fr}}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 雲端監控 · #ActiveInsight</p>
+      <h1>Synology Active Insight:集中監控所有 NAS,主動偵測異常</h1>
+      <p class="lead">Synology <strong>Active Insight</strong> 是一款<strong>雲端監控服務</strong>:自動即時監控、資源分析與異常診斷,並提供故障排除建議。透過<strong>單一入口</strong>,即可在電腦與行動裝置上集中監控同一 Synology 帳戶下的<strong>所有 NAS</strong>,隨時掌握系統與儲存空間的健康狀態,並即時接收異常通知。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#ActiveInsight</span><span>#集中監控</span><span>#雲端監控</span><span>#主動偵測</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/8dZlgoFGWdY"
+        title="Synology Active Insight 集中監控與主動偵測"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology Active Insight － 掌握所有 NAS 使用狀況</b>　·　<a href="https://youtu.be/8dZlgoFGWdY" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- dashboard mockup -->
+    <div class="dash" role="img" aria-label="Active Insight 總覽:集中列出同帳戶下所有 NAS 的健康狀態,其中一台顯示警告。">
+      <div class="dh">
+        <span class="lg" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+        <span class="t">Active Insight 總覽</span>
+        <span class="c">3 台 NAS</span>
+      </div>
+      <div class="drow">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="nm">辦公室 NAS<small>DS1821+</small></span>
+        <span class="meta"><span class="st ok">正常</span><span class="mn">系統・儲存 良好</span></span>
+      </div>
+      <div class="drow">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="nm">門市 NAS<small>DS220+</small></span>
+        <span class="meta"><span class="st ok">正常</span><span class="mn">系統・儲存 良好</span></span>
+      </div>
+      <div class="drow">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="nm">機房 NAS<small>RS1221+</small></span>
+        <span class="meta"><span class="st warn">警告</span><span class="mn">偵測到異常事件</span></span>
+      </div>
+      <p class="dash-cap">單一入口集中列出所有 NAS 的健康狀態,異常一眼看出,並即時發送通知。</p>
+    </div>
+
+    <!-- 01 features -->
+    <section>
+      <h2><span class="n">01</span>主要功能</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h5"/></svg></span>
+          <h3>自動即時監控</h3>
+          <p>持續監控系統與儲存空間的<b>健康狀態與效能</b>,無須手動逐台檢查。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+          <h3>資源分析</h3>
+          <p>分析 CPU、記憶體、儲存等<b>資源使用趨勢</b>,提早發現瓶頸。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span>
+          <h3>異常診斷與排除建議</h3>
+          <p>自動<b>診斷異常</b>並提供<b>故障排除建議</b>,縮短處理時間。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <h3>集中總覽</h3>
+          <p><b>單一入口</b>監控同帳戶下的所有 NAS,電腦與行動裝置皆可檢視。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+          <h3>即時異常通知</h3>
+          <p>發生異常事件時<b>即時推播</b>,人在外面也能第一時間掌握。</p>
+        </article>
+      </div>
+      <div class="callout">
+        <p><b>適合對象:</b>管理<b>多台或多據點 NAS</b> 的 MIS、IT 人員與經銷商——不必逐台登入,就能集中掌握每一台的健康與效能。</p>
+      </div>
+    </section>
+
+    <!-- 02 plans -->
+    <section>
+      <h2><span class="n">02</span>方案與費用</h2>
+      <p class="sec-sub">Active Insight 分免費與付費(Premium)兩種方案,依<b>管理的裝置台數</b>與<b>功能</b>區分。</p>
+      <div class="plans">
+        <div class="plan free">
+          <span class="plbl">Free 免費方案</span>
+          <p class="pp">最多 3 台裝置 · 免費</p>
+          <ul>
+            <li>基本的系統與儲存空間監控</li>
+            <li>適合少量 NAS 的一般使用者</li>
+          </ul>
+        </div>
+        <div class="plan prem">
+          <span class="plbl">Premium 付費方案</span>
+          <p class="pp">每台裝置 / 年 授權制 · 最高 2,000 台</p>
+          <ul>
+            <li>管理<b>超過 3 台</b>裝置即需 Premium</li>
+            <li>進階功能:偵測異常登入／檔案活動、自訂報告、自訂事件、資料保留 1 年等</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px">※ 方案內容、授權費用與免費額度可能調整,實際以 Synology 官方說明為準(見下方參考資料)。</p>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/active-insight/overview" target="_blank" rel="noopener noreferrer">Synology:Active Insight 介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/active-insight/pricing" target="_blank" rel="noopener noreferrer">Synology:Active Insight 方案與費用</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;Active Insight 的監控項目、分析與診斷內容、支援機型與方案會因 DSM 版本與服務方案而異,實際請以 Synology 官方文件與服務說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

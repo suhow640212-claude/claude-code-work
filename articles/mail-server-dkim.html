@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail Server 安全機制：DKIM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* spoof */
+  .spoof{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .mail{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .mail .mh{padding:10px 16px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:8px}
+  .mail.real .mh{background:var(--accent-soft);color:var(--accent-strong)}
+  .mail.fake .mh{background:var(--danger-soft);color:var(--danger)}
+  .mail .mb{padding:12px 16px;font-size:.86rem;line-height:1.75}
+  .mail .mb div{display:grid;grid-template-columns:62px 1fr;gap:8px}
+  .mail .mb span{color:var(--muted)}
+  .mail .mb code{font-family:"IBM Plex Mono",monospace;font-size:.82rem;word-break:break-all}
+  .mail .mb .bad{color:var(--danger);font-weight:500}
+  .mail .sig{margin:0 16px 14px;font-family:"IBM Plex Mono",monospace;font-size:.76rem;border-radius:8px;padding:6px 10px;word-break:break-all}
+  .mail.real .sig{background:var(--surface-2);border:1px solid var(--border);color:var(--accent-strong)}
+  .mail.fake .sig{background:var(--surface-2);border:1px dashed var(--danger);color:var(--danger)}
+
+  /* keys flow */
+  .keys{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-top:20px;align-items:stretch}
+  .kc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kc .kt{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1rem;margin-bottom:6px}
+  .kc .kt svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .kc.pri .kt{color:var(--danger)} .kc.pub .kt{color:var(--accent-strong)}
+  .kc .where{display:inline-block;font-size:.76rem;font-weight:700;border-radius:6px;padding:0 8px;margin-bottom:6px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted)}
+  .kc p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .kc b{color:var(--ink)}
+  .pair-ic{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem;font-weight:700;text-align:center;gap:4px}
+  .pair-ic span{font-size:1.4rem;color:var(--accent-strong);line-height:1}
+  @media (max-width:600px){ .keys{grid-template-columns:1fr} .pair-ic span{transform:rotate(90deg)} }
+
+  figure.shot{margin:18px 0 2px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:720px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+  .oc{background:var(--surface);border:1px solid var(--border);border-top:4px solid;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .oc .r{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.95rem}
+  .oc h3{margin:2px 0 0;font-size:1rem;font-weight:700}
+  .oc.pass{border-top-color:var(--accent)} .oc.pass .r{color:var(--accent-strong)}
+  .oc.q{border-top-color:var(--warn)} .oc.q .r{color:var(--warn)}
+  .oc.rej{border-top-color:var(--danger)} .oc.rej .r{color:var(--danger)}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--ink)}
+  .step figure.shot{background:var(--surface-2);box-shadow:none}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .fields{display:grid;gap:0;margin:4px 0 6px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:90px 1fr;gap:14px;padding:9px 14px;border-bottom:1px solid var(--border);align-items:center}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-weight:700;font-size:.9rem}
+  .fd code{font-family:"IBM Plex Mono",monospace;font-size:.84rem;color:var(--accent-strong);word-break:break-all}
+  .fd code i{font-style:normal;color:var(--danger);background:var(--danger-soft);border-radius:4px;padding:0 4px}
+  .fd small{display:block;color:var(--muted);font-size:.8rem}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+  .callout .ref{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.9rem}
+  .callout a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  .callout a:hover{border-bottom-color:var(--accent-strong)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .seealso{margin:14px 0 0;font-size:.9rem;color:var(--ink)}
+  .seealso + .seealso{margin-top:4px}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Mail Server 安全機制 · #DKIM</p>
+      <h1>Mail Server 安全機制－DKIM（DomainKeys Identified Mail）防止電子郵件遭到假冒</h1>
+      <p class="lead">採用 <b>DomainKeys Identified Mail（DKIM）</b>標準，有助於防止您網域的外寄郵件遭到假冒。部分電子郵件伺服器會要求寄件網域設定 DKIM，以免收到假冒的電子郵件。</p>
+      <div class="tags"><span>#MailPlus</span><span>#DKIM</span></div>
+    </header>
+
+    <!-- spoof -->
+    <section>
+      <h2><span class="n">01</span>什麼是假冒電子郵件</h2>
+      <p class="sec-sub">「假冒電子郵件」是指變更電子郵件內容，讓郵件顯示<b>非真實寄件來源</b>的寄件者或寄件地址。假冒是在未經授權的情況下使用電子郵件，這種情形十分常見。</p>
+      <div class="spoof">
+        <div class="mail real">
+          <div class="mh">✓ 由 hongku.tw 郵件伺服器寄出</div>
+          <div class="mb">
+            <div><span>寄件者</span><code>service@hongku.tw</code></div>
+            <div><span>主旨</span><code>本月帳單通知</code></div>
+          </div>
+          <div class="sig">DKIM-Signature: d=hongku.tw; s=hongku; … 驗證通過</div>
+        </div>
+        <div class="mail fake">
+          <div class="mh">✕ 由第三方偽造寄出</div>
+          <div class="mb">
+            <div><span>寄件者</span><code>service@hongku.tw</code></div>
+            <div><span>主旨</span><code class="bad">帳戶異常，請立即登入驗證</code></div>
+          </div>
+          <div class="sig">無 DKIM 簽章，或簽章驗證失敗</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- how -->
+    <section>
+      <h2><span class="n">02</span>DKIM 的運作方式</h2>
+      <p class="sec-sub">DKIM 使用一組成對的金鑰：寄件伺服器以<b>私鑰</b>在所有外寄郵件的標頭加上<b>加密簽章</b>；收件伺服器則從寄件網域的 DNS 取得<b>公鑰</b>驗證簽章，確認郵件寄出後未遭人竄改。</p>
+      <div class="keys">
+        <div class="kc pri">
+          <div class="kt"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>私鑰（Private Key）</div>
+          <span class="where">保存於 MailPlus Server</span>
+          <p>寄出郵件時，為郵件標頭加上 <b>DKIM 簽章</b>。私鑰不對外公開。</p>
+        </div>
+        <div class="pair-ic" aria-hidden="true"><span>⇄</span>成對金鑰</div>
+        <div class="kc pub">
+          <div class="kt"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg>公鑰（Public Key）</div>
+          <span class="where">發布於 DNS（TXT 記錄）</span>
+          <p>收件伺服器取得公鑰，<b>驗證簽章</b>並確認郵件未被竄改。</p>
+        </div>
+      </div>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/dkim-1.jpg" alt="DKIM 運作流程：寄件伺服器傳送郵件時加上 Domain Key 私鑰簽章，收件伺服器向 DNS Server 取得 Domain Key 公鑰檢查郵件是否被竄改，依結果 pass、quarantine、reject 處理"><figcaption>DKIM 運作流程：私鑰簽章、公鑰驗證。</figcaption></figure>
+      <div class="out">
+        <div class="oc pass"><span class="r">pass</span><h3>傳送到使用者收件匣</h3></div>
+        <div class="oc q"><span class="r">quarantine</span><h3>傳送至垃圾郵件匣</h3></div>
+        <div class="oc rej"><span class="r">reject</span><h3>拒絕傳送</h3></div>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">03</span>設定步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>啟用 DKIM 簽署並產生公開金鑰<span class="path">MailPlus Server › 網域 › 編輯 › 進階設定</span></h3>
+          <p>勾選 <b>針對寄出的郵件啟動 DKIM 簽署</b>，設定 <b>DKIM 選取器前置字串</b>（範例 <code>hongku</code>），按 <b>產生公開金鑰</b>，並將產生的金鑰複製下來。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/dkim-2.jpg" alt="Synology MailPlus Server 網域 hongku.tw 編輯進階設定，勾選針對寄出的郵件啟動 DKIM 簽署，選取器前置字串 hongku，產生公開金鑰"><figcaption>Synology MailPlus Server - 網域進階設定：啟動 DKIM 簽署並產生公開金鑰</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>啟用 DKIM 認證<span class="path">MailPlus Server › 安全性 › 認證</span></h3>
+          <p>於 <b>安全性 › 認證</b> 勾選 <b>DKIM</b>，讓 MailPlus Server 對收到的郵件執行 DKIM 驗證。</p>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>於 DNS Server 新增 TXT 記錄<span class="path">DNS Server › 轄區管理 › 編輯 › 資源記錄 › 新增 › TXT</span></h3>
+          <p>開啟 Synology DNS Server，於轄區管理編輯網域，新增一筆 TXT 記錄：</p>
+          <div class="fields">
+            <div class="fd"><span class="k">名稱</span><span><code>hongku._domainkey</code><small>格式為「選取器前置字串._domainkey」</small></span></div>
+            <div class="fd"><span class="k">TTL</span><span><code>3600</code></span></div>
+            <div class="fd"><span class="k">資訊</span><span><code>v=DKIM1; k=rsa; p=<i>步驟 1 複製的公開金鑰</i></code></span></div>
+          </div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/dkim-3.jpg" alt="DNS Server 編輯資源紀錄 TXT，名稱 hongku._domainkey，TTL 3600，資訊 v=DKIM1; k=rsa; p=公開金鑰"><figcaption>Synology DNS Server - 新增 DKIM 的 TXT 資源記錄範例</figcaption></figure>
+          <p>按 <b>確定</b> 儲存，即完成 DKIM 設定。</p>
+        </div></div>
+
+      </div>
+      <div class="callout">
+        <h3>搭配 SPF 與 DMARC</h3>
+        <p>SPF 驗證<b>寄件來源 IP</b>，DKIM 驗證<b>郵件內容未遭竄改</b>，兩者互補；再搭配 DMARC 指定驗證失敗時的處理方式，可完整防範網域遭到冒用。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/UG/Synology_MailPlus_Server_admin_guide_3/3" target="_blank" rel="noopener noreferrer">Synology 知識中心：Synology MailPlus Server 管理員指南</a>
+      </div>
+      <p class="seealso">參考 SPF 設定說明：<a href="https://hongku.com.tw/mail-server-spf/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-spf/</a></p>
+      <p class="seealso">參考 DMARC 設定說明：<a href="https://hongku.com.tw/mail-server-dmarc/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-dmarc/</a></p>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的網域名稱與金鑰僅供示意，實際請使用 MailPlus Server 為您的網域產生的公開金鑰。</p>
+    </footer>
+  </main>
+</body>
+</html>

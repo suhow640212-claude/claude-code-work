@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outlook 同步聯絡人與行事曆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --vio:#5b4a9a; --vio-soft:#ece8f6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+  .sec-sub a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+
+  /* sync diagram */
+  .sync{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px;
+    display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:12px;align-items:center}
+  .side{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .side b{display:block;font-size:1rem}
+  .side span{display:block;font-size:.82rem;color:var(--muted);line-height:1.5}
+  .side .it{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .side .it i{font-style:normal;font-size:.8rem;border-radius:7px;padding:3px 8px;background:var(--surface);border:1px solid var(--border)}
+  .mid{display:flex;flex-direction:column;gap:8px}
+  .lane{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700}
+  .lane::before,.lane::after{content:"";flex:1;height:2px}
+  .lane.c{color:var(--lock)} .lane.c::before,.lane.c::after{background:var(--lock)}
+  .lane.k{color:var(--vio)} .lane.k::before,.lane.k::after{background:var(--vio)}
+  .tool{text-align:center;background:var(--accent-soft);color:var(--accent-strong);border-radius:10px;padding:8px;font-weight:800;font-size:.9rem}
+  .tool small{display:block;font-weight:500;color:var(--muted);font-size:.76rem}
+  @media (max-width:640px){ .sync{grid-template-columns:1fr} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .ct .step .bullet{background:var(--vio-soft);color:var(--vio)}
+  .ca .step .bullet{background:var(--lock-soft);color:var(--lock)}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.84em;color:var(--accent-strong);word-break:break-all}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .fields{display:grid;gap:0;margin:4px 0 10px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:8px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:.9rem}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.84rem}
+  .fd .v{color:var(--muted)}
+  .fd .v b{color:var(--ink)}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  .part-h{display:flex;align-items:center;gap:10px}
+  .part-h .tag{font-family:"IBM Plex Mono",monospace;font-size:.78rem;font-weight:500;border-radius:6px;padding:1px 9px}
+  .ct .part-h .tag{background:var(--vio-soft);color:var(--vio)}
+  .ca .part-h .tag{background:var(--lock-soft);color:var(--lock)}
+
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.2em;color:var(--muted);font-size:.94rem}
+  .callout li{margin:0 0 6px}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Outlook · CalDAV / CardDAV</p>
+      <h1>Microsoft Outlook 同步 Synology MailPlus 聯絡人＆行事曆</h1>
+      <p class="lead">習慣使用 Outlook 收發郵件的使用者不在少數。當郵件伺服器轉換至 Synology MailPlus 後，Outlook 的聯絡人與行事曆需透過第三方工具同步。本篇介紹如何以 <b>CalDav Synchronizer</b> 搭配 <b>Synology Contacts</b> 與 <b>Synology Calendar</b> 完成設定。</p>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>同步架構</h2>
+      <div class="sync" role="img" aria-label="Outlook 的連絡人與行事曆透過 CalDav Synchronizer，分別以 CardDAV 與 CalDAV 雙向同步至 Synology Contacts 與 Synology Calendar">
+        <div class="side"><b>Microsoft Outlook</b><span>Windows 桌面版</span><div class="it"><i>連絡人</i><i>行事曆</i></div></div>
+        <div class="mid">
+          <div class="lane k">CardDAV ⇄</div>
+          <div class="tool">CalDav Synchronizer<small>Outlook 增益集</small></div>
+          <div class="lane c">CalDAV ⇄</div>
+        </div>
+        <div class="side"><b>Synology NAS</b><span>MailPlus 環境</span><div class="it"><i>Synology Contacts</i><i>Synology Calendar</i></div></div>
+      </div>
+      <p class="sec-sub" style="margin-top:14px"><b>CardDAV</b> 用於同步聯絡人，<b>CalDAV</b> 用於同步行事曆。CalDav Synchronizer 為免費的 Outlook 增益集，可至 <a href="https://caldavsynchronizer.org/" target="_blank" rel="noopener noreferrer">caldavsynchronizer.org</a> 下載安裝。</p>
+    </section>
+
+    <section class="ct">
+      <h2 class="part-h"><span class="n">01</span>同步聯絡人<span class="tag">CardDAV</span></h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟聯絡人的 CardDAV 設定<span class="path">Synology Contacts › 我的聯絡人 › ⋮ › CardDAV</span></h3>
+          <p>開啟 Synology Contacts，於左側 <b>我的聯絡人</b> 旁按 <b>⋮</b>，選擇 <b>CardDAV</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-1.jpg" alt="Synology Contacts 網頁，我的聯絡人選單中的 CardDAV"><figcaption>Synology Contacts：我的聯絡人 › CardDAV</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>複製 CardDAV 用戶端網址</h3>
+          <p>於 <b>CardDAV 帳號</b> 視窗中，複製 <b>CardDAV 用戶端</b> 的網址，稍後貼入 Outlook。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-2.jpg" alt="CardDAV 帳號視窗，列出 iOS 與 CardDAV 用戶端網址"><figcaption>複製「CardDAV 用戶端」網址。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>於 Outlook 新增同步設定檔</h3>
+          <p>安裝 CalDav Synchronizer 後，於 Outlook 功能區開啟 <b>CalDav Synchronizer › Synchronization Profiles</b>，在 Options 視窗按左上角的 <b>＋</b> 新增設定檔。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-3.jpg" alt="CalDav Synchronizer Options 視窗，紅框標示新增設定檔按鈕"><figcaption>Options 視窗：按「＋」新增設定檔。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>選擇 Generic CalDAV/CardDAV</h3>
+          <p>於 <b>Select Profile Type</b> 選擇 <b>Generic CalDAV/CardDAV</b>，按 <b>OK</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-4.jpg" alt="Select Profile Type，選擇 Generic CalDAV/CardDAV"><figcaption>設定檔類型：Generic CalDAV/CardDAV</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>指定 Outlook 連絡人資料夾</h3>
+          <p><b>Name</b> 輸入設定檔名稱（範例 <code>Contacts</code>），於 <b>Outlook folder</b> 按 <b>…</b>，選擇 <b>連絡人</b> 資料夾。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-5.jpg" alt="設定檔名稱 Contacts，選取資料夾視窗中選擇連絡人"><figcaption>Outlook folder 選擇「連絡人」。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">6</span><div>
+          <h3>輸入伺服器設定並測試</h3>
+          <div class="fields">
+            <div class="fd"><span class="k">DAV URL</span><span class="v">貼上步驟 2 複製的 CardDAV 用戶端網址</span></div>
+            <div class="fd"><span class="k">Username</span><span class="v">DSM 帳號</span></div>
+            <div class="fd"><span class="k">Password</span><span class="v">DSM 密碼</span></div>
+            <div class="fd"><span class="k">Email address</span><span class="v">使用者的電子郵件地址</span></div>
+          </div>
+          <p>按 <b>Test or discover settings</b> 測試連線。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-6.jpg" alt="Contacts 設定檔，DAV URL 為 CardDAV 網址，輸入帳號密碼與電子郵件，按 Test or discover settings"><figcaption>輸入 DAV URL 與帳號資訊 → Test or discover settings</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">7</span><div>
+          <h3>選擇要同步的通訊錄</h3>
+          <p>於 <b>Select Resource</b> 視窗選擇要同步的通訊錄（範例 <b>My Contacts</b>，存取權限 rw），按 <b>OK</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-7.jpg" alt="Select Resource 視窗，Address Books 清單選擇 My Contacts"><figcaption>選擇通訊錄「My Contacts」。</figcaption></figure>
+        </div></div>
+
+      </div>
+    </section>
+
+    <section class="ca">
+      <h2 class="part-h"><span class="n">02</span>同步行事曆<span class="tag">CalDAV</span></h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟行事曆的 CalDAV 帳號設定<span class="path">Synology Calendar › 行事曆 › ▾ › CalDAV 帳號設定</span></h3>
+          <p>開啟 Synology Calendar，於右側要同步的行事曆旁按 <b>▾</b>，選擇 <b>CalDAV 帳號設定</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-8.jpg" alt="Synology Calendar 網頁，行事曆選單中的 CalDAV 帳號設定"><figcaption>Synology Calendar：行事曆 › CalDAV 帳號設定</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>複製行事曆網址</h3>
+          <p>複製 <b>Thunderbird</b> 欄位的網址。此網址指向單一行事曆，適用於 CalDav Synchronizer。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-9.jpg" alt="CalDAV 帳號設定視窗，列出 macOS/iOS 與 Thunderbird 網址"><figcaption>複製「Thunderbird」欄位的網址。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>新增行事曆設定檔並測試</h3>
+          <p>依前述方式新增 <b>Generic CalDAV/CardDAV</b> 設定檔：</p>
+          <div class="fields">
+            <div class="fd"><span class="k">Name</span><span class="v">設定檔名稱，例如 <b>Calendar</b></span></div>
+            <div class="fd"><span class="k">Outlook folder</span><span class="v">選擇 <b>行事曆</b> 資料夾</span></div>
+            <div class="fd"><span class="k">DAV URL</span><span class="v">貼上步驟 2 複製的行事曆網址</span></div>
+            <div class="fd"><span class="k">Username / Password</span><span class="v">DSM 帳號與密碼</span></div>
+          </div>
+          <p>按 <b>Test or discover settings</b> 測試連線，完成後按 <b>OK</b> 儲存。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/cal-sync-10.jpg" alt="行事曆設定檔，Outlook folder 行事曆，DAV URL 為 CalDAV 網址，按 Test or discover settings"><figcaption>行事曆設定檔：Outlook folder 選擇「行事曆」並填入 CalDAV 網址。</figcaption></figure>
+        </div></div>
+
+      </div>
+
+      <div class="callout">
+        <h3>同步設定說明</h3>
+        <ul>
+          <li><b>Synchronization mode</b>：預設 <b>Outlook ↔ Server (Two-Way)</b> 雙向同步，於 Outlook 或 Synology 任一端修改皆會同步至另一端。</li>
+          <li><b>Synchronization interval</b>：同步間隔，範例為 30 分鐘。</li>
+          <li>若有多個行事曆或通訊錄需要同步，請分別新增設定檔。</li>
+        </ul>
+      </div>
+      <div class="warn"><b>建議：</b>首次同步前，請先備份 Outlook 中既有的連絡人與行事曆資料，以免雙向同步時發生資料覆蓋。</div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://caldavsynchronizer.org/" target="_blank" rel="noopener noreferrer">CalDav Synchronizer 官方網站</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；CalDav Synchronizer 為第三方開源工具，介面可能隨版本更新而有所不同，實際請以官方說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

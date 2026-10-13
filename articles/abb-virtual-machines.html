@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABB 備份虛擬主機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* vm hub */
+  .vmhub{margin-top:24px}
+  .platforms{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pf{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 10px;box-shadow:var(--shadow);text-align:center}
+  .pf .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 8px}
+  .pf .ic svg{width:21px;height:21px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .pf .nm{font-weight:700;font-size:.92rem}
+  .converge{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 0;color:var(--accent-strong);flex-wrap:wrap}
+  .converge .ar{font-size:1.3rem;font-weight:800;line-height:1}
+  .converge .lb{font-family:"IBM Plex Mono",monospace;font-size:.74rem;font-weight:700;background:var(--accent-soft);padding:3px 10px;border-radius:999px}
+  .target{background:var(--accent-soft);border:1px solid var(--accent);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:15px;justify-content:center}
+  .target .ic{width:48px;height:48px;border-radius:12px;background:#fff;color:var(--accent-strong);display:grid;place-items:center;flex:none}
+  .target .ic svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .target .tt{font-weight:800;font-size:1.05rem;color:var(--ink)}
+  .target .ts{font-size:.85rem;color:var(--accent-strong);margin-top:1px}
+  .hub-cap{margin:13px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+  .step b{color:var(--ink)}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 虛擬機備份 · #ABB</p>
+      <h1>用 Active Backup for Business 備份虛擬主機(VMware／Hyper-V)</h1>
+      <p class="lead">Synology <strong>Active Backup for Business(ABB)</strong> 提供<strong>免費</strong>的 <strong>VMware vSphere</strong> 與 <strong>Hyper-V</strong> 虛擬機器備份與還原:<strong>無需額外授權費、無上限</strong>,並透過<strong>增量備份</strong>與<strong>全域去重複化</strong>有效降低備份時間與所需儲存空間。本篇介紹如何設定 ABB 備份你的虛擬化主機。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#ActiveBackup</span><span>#虛擬機備份</span><span>#VMware</span><span>#HyperV</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/wB07-NLA_U0"
+        title="使用 Synology Active Backup for Business 備份虛擬主機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>使用 Active Backup for Business 備份虛擬主機</b>　·　<a href="https://youtu.be/wB07-NLA_U0" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>如何在 Active Backup for Business 中<b>設定備份 VMware／Hyper-V 虛擬主機</b>的完整流程。</div>
+
+    <!-- vm hub -->
+    <div class="vmhub" role="img" aria-label="虛擬機備份架構:VMware vSphere 與 Hyper-V 的虛擬機器,透過增量備份與全域去重備份到 Synology NAS 的 ABB。">
+      <div class="platforms">
+        <div class="pf">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5"/></svg></span>
+          <div class="nm">VMware vSphere</div>
+        </div>
+        <div class="pf">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M8 21h8M12 18v3"/></svg></span>
+          <div class="nm">Hyper-V</div>
+        </div>
+      </div>
+      <div class="converge" aria-hidden="true">
+        <span class="ar">↓</span><span class="lb">增量備份 · 全域去重</span><span class="ar">↓</span>
+      </div>
+      <div class="target">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <div><div class="tt">Synology NAS · ABB</div><div class="ts">集中備份 · 即時還原</div></div>
+      </div>
+      <p class="hub-cap">VMware 與 Hyper-V 的虛擬機器集中備份到 Synology NAS;增量＋去重讓備份更快、更省空間。</p>
+    </div>
+
+    <!-- 01 setup steps -->
+    <section>
+      <h2><span class="n">01</span>設定備份虛擬主機</h2>
+      <p class="sec-sub">詳細操作請見影片與官方指南,流程大致如下:</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <p>開啟 <b>Active Backup for Business</b>,新增<b>虛擬機器</b>備份任務。</p></div>
+        <div class="step"><span class="num">2</span>
+          <p>連線至你的 Hypervisor——<b>VMware vSphere</b> 或 <b>Hyper-V</b>。</p></div>
+        <div class="step"><span class="num">3</span>
+          <p>勾選要備份的<b>虛擬機器</b>(可一次選多台)。</p></div>
+        <div class="step"><span class="num">4</span>
+          <p>設定<b>備份排程</b>與<b>版本保留政策</b>。</p></div>
+        <div class="step"><span class="num">5</span>
+          <p>套用後開始備份:<b>首次完整備份、之後僅增量</b>。</p></div>
+      </div>
+    </section>
+
+    <!-- 02 why efficient -->
+    <section>
+      <h2><span class="n">02</span>為什麼更快、更省空間</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>增量備份:</b>首次完整備份後,之後只傳輸<b>變更的資料</b>,大幅縮短備份時間與頻寬。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>全域去重複化:</b>跨所有備份資料移除<b>重複的資料區塊</b>,顯著降低所需儲存空間。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>即時還原:</b>需要時可快速還原<b>整台虛擬機器</b>或其中的檔案,縮短停機時間。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/UG/Synology_ABB_admin_guide_Virtual_Machines/1" target="_blank" rel="noopener noreferrer">Synology:ABB 管理者指南－虛擬機器備份</a>
+        <a href="https://www.synology.com/zh-tw/dsm/packages/ActiveBackup" target="_blank" rel="noopener noreferrer">Synology:Active Backup for Business 適用機種</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;支援的虛擬化平台、備份/還原方式、適用機種與操作介面會因型號、DSM 版本與套件版本而異,實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

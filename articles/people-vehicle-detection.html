@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人車偵測 · Surveillance Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#b06a1a; --warn-soft:#fbf0e0;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* vs compare */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+  .vs .col{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px 18px;box-shadow:var(--shadow)}
+  .vs .bad{border-top:4px solid var(--danger)}
+  .vs .good{border-top:4px solid var(--accent)}
+  .vs .lbl{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.08em;
+    text-transform:uppercase;display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;font-weight:500}
+  .vs .bad .lbl{color:var(--danger);background:var(--danger-soft)}
+  .vs .good .lbl{color:var(--accent-strong);background:var(--accent-soft)}
+  .vs h3{margin:0 0 10px;font-size:1.08rem;font-weight:800}
+  .vs ul{margin:0;padding-left:1.1em;color:var(--muted);font-size:.93rem;line-height:1.7}
+  .vs li{margin:0 0 6px}
+  .vs li:last-child{margin-bottom:0}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .vs{grid-template-columns:1fr}
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step p{margin:0;color:var(--muted);font-size:.96rem}
+  .step b{color:var(--ink)}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:8px 15px;font-size:.9rem;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:9px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · AI 智慧偵測 · #人車偵測</p>
+      <h1>人車偵測:只為真正要緊的人與車示警</h1>
+      <p class="lead">Synology <strong>全系列網路攝影機內建「人車偵測」</strong>,而且搭配<strong>任何型號</strong>的 Synology 主機都能用。它專門盯著<strong>停留在限制區內的行人與車輛</strong>——像是有人在平交道徘徊、人員進入車道——再配合<strong>行動規則</strong>自動發送通知或語音警報。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#人車偵測</span><span>#SurveillanceStation</span><span>#AI攝影機</span><span>#免DVA</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/28-84ZCaQjk"
+        title="人車偵測－Synology Surveillance Station"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>人車偵測－Synology Surveillance Station</b>　·　<a href="https://youtu.be/28-84ZCaQjk" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- 01 motion vs people/vehicle -->
+    <section>
+      <h2><span class="n">01</span>一般位移偵測，為什麼讓人想關掉？</h2>
+      <p class="sec-sub">傳統「位移偵測」只要畫面有變化就觸發,結果整夜都在誤報;人車偵測讓警報只為真正的目標響起。</p>
+      <div class="vs">
+        <div class="col bad">
+          <span class="lbl">位移偵測</span>
+          <h3>只要「有變化」就響</h3>
+          <ul>
+            <li>落葉、樹影搖晃就觸發</li>
+            <li>下雨、雲影、燈光變化誤報</li>
+            <li>貓狗、鳥飛過也通知你</li>
+            <li>半夜一直響，久了乾脆關掉</li>
+          </ul>
+        </div>
+        <div class="col good">
+          <span class="lbl">人車偵測</span>
+          <h3>只為「人」和「車」響</h3>
+          <ul>
+            <li>只辨識<b>行人</b>與<b>車輛</b></li>
+            <li>自動略過動物、風吹草動、光影</li>
+            <li>誤報大幅減少</li>
+            <li>真正該看的事件才通知</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 edge AI, any NAS -->
+    <section>
+      <h2><span class="n">02</span>關鍵:AI 在攝影機裡,任何 Synology 主機都能用</h2>
+      <p class="sec-sub">「是不是人、是不是車」這個判斷,是在攝影機內部就完成的;主機只負責收下已經篩選過的事件。所以不必 DVA 專用主機,也不挑 NAS 等級。</p>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+          <p class="ttl">Synology 攝影機</p>
+          <p class="ds">內建人車 AI，當場判斷目標</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 9v6l-4-2v-4z"/></svg></span>
+          <p class="ttl">只送出「人／車」事件</p>
+          <p class="ds">雜訊與誤觸不打擾主機</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/></svg></span>
+          <p class="ttl">任何 Synology 主機</p>
+          <p class="ds">Surveillance Station 接收、錄影、通知</p>
+        </div>
+      </div>
+      <div class="callout">
+        <h3>為什麼這點很重要</h3>
+        <ul>
+          <li><b>不需要 DVA 系列主機</b>,也不需要高階 NAS。</li>
+          <li>既有的 Synology NAS,搭配 Synology 攝影機就能啟用。</li>
+          <li>Synology 全系列網路攝影機皆內建此功能。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 03 how it works -->
+    <section>
+      <h2><span class="n">03</span>運作方式:框出限制區,只抓人與車</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <p>在攝影機畫面上框出<b>限制區</b>(要重點監看的範圍)。</p></div>
+        <div class="step"><span class="num">2</span>
+          <p>選擇偵測對象:<b>行人</b>、<b>車輛</b>,或兩者皆要。</p></div>
+        <div class="step"><span class="num">3</span>
+          <p>攝影機 AI 判斷有人／車<b>進入或停留</b>在區內 → 立即產生事件。</p></div>
+        <div class="step"><span class="num">4</span>
+          <p>事件即時觸發行動規則,同時留存,日後可用<b>智慧搜尋</b>快速調閱。</p></div>
+      </div>
+      <p class="sec-sub" style="margin-top:22px">常見的應用場景:</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>平交道徘徊</span>
+        <span class="chip"><span class="dot"></span>人員進入車道</span>
+        <span class="chip"><span class="dot"></span>周界禁區入侵</span>
+        <span class="chip"><span class="dot"></span>車庫・停車場</span>
+        <span class="chip"><span class="dot"></span>店門口滯留</span>
+        <span class="chip"><span class="dot"></span>工地危險區</span>
+      </div>
+    </section>
+
+    <!-- 04 action rules -->
+    <section>
+      <h2><span class="n">04</span>配合行動規則,自動反應</h2>
+      <p class="sec-sub">偵測到人或車之後,交給「行動規則」決定怎麼反應——不只是記錄,而是當下就出手。</p>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+          <h3>事件通知</h3>
+          <p>即時推播到手機 App 或 Email,<b>人在外面也收得到</b>,第一時間掌握狀況。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg></span>
+          <h3>音訊輸出</h3>
+          <p>連動現場喇叭廣播,用<b>語音當場嚇阻</b>闖入者,不只是事後才知道。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+          <h3>連動警報</h3>
+          <p>觸發錄影、數位輸出、燈光或其他裝置,組成一套完整的應變動作。</p>
+        </article>
+      </div>
+      <div class="callout">
+        <p><b>一句話:</b>人車偵測負責「<b>看準目標</b>」,行動規則負責「<b>立刻反應</b>」,兩者搭配,就是一套會主動示警的監控。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/surveillance/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;偵測對象、限制區設定、行動規則可用的動作(通知、音訊輸出等)會因攝影機型號、Surveillance Station 版本與授權而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

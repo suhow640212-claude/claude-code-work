@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>邊際錄影 · Edge Recording</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:10px;margin-top:24px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 15px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column}
+  .flow .node .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1.02rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;align-self:center;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  .flow-cap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:8px 15px;font-size:.9rem;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:9px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+  /* screenshot */
+  figure.shot{margin:22px 0 0;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout.warn h3{color:var(--warn)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · Edge Recording · #邊際錄影</p>
+      <h1>邊際錄影－連線斷了不擔心,攝影機先錄在記憶卡</h1>
+      <p class="lead">邊際錄影(Edge Recording)讓攝影機在<strong>與 NAS 連線不穩或中斷時</strong>,改用機身 <strong>microSD 卡</strong>作為備份儲存空間;<strong>連線恢復後</strong>,錄影檔會<strong>自動取回並合併</strong>回 Surveillance Station,補上這段空窗。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#邊際錄影</span><span>#EdgeRecording</span><span>#SurveillanceStation</span><span>#microSD</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/AFLtfxIECvk"
+        title="邊際錄影－Synology 網路攝影機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>邊際錄影－Synology 網路攝影機</b>　·　<a href="https://youtu.be/AFLtfxIECvk" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- flow -->
+    <div class="flow" role="img" aria-label="邊際錄影流程:連線中斷時改用 microSD 卡錄影,連線恢復後自動取回合併。">
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8a4 4 0 0 0 0 8h2M17 16a4 4 0 0 0 0-8h-2"/><path d="M4 3l16 18"/></svg></span>
+        <p class="ttl">與 NAS 連線中斷</p>
+        <p class="ds">連線不穩或斷線時</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M10 3v4M13 3v4"/></svg></span>
+        <p class="ttl">microSD 卡接手</p>
+        <p class="ds">攝影機就地備份影像</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="15" width="16" height="5" rx="2"/><path d="M12 11v4M12 15l-2-2M12 15l2-2"/></svg></span>
+        <p class="ttl">連線恢復自動取回</p>
+        <p class="ds">合併回 Surveillance Station</p>
+      </div>
+    </div>
+    <p class="flow-cap">連線不穩時改用攝影機 microSD 卡備援;連線恢復後自動取回並合併回 Surveillance Station。</p>
+
+    <!-- 01 when it records to SD -->
+    <section>
+      <h2><span class="n">01</span>什麼時候會錄到 microSD 卡</h2>
+      <p class="sec-sub">在攝影機的「錄影規則 → 事件」裡設定寫卡時機。</p>
+      <div class="callout">
+        <h3>預設:與 Synology 儲存系統(NAS)斷線時</h3>
+        <p>只要連線一中斷,攝影機就<b>自動「連續錄影」</b>到 microSD 卡,直到連線恢復——這是<b>預設、也是最主要</b>的備援模式。</p>
+      </div>
+      <p class="sec-sub" style="margin-top:22px">也可改成「僅特定事件發生時才寫卡」,可選事件例如:</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>動作偵測</span>
+        <span class="chip"><span class="dot"></span>音訊偵測</span>
+        <span class="chip"><span class="dot"></span>破壞偵測</span>
+        <span class="chip"><span class="dot"></span>人、車、入侵偵測</span>
+        <span class="chip"><span class="dot"></span>QR Code 偵測</span>
+      </div>
+      <p class="sec-sub" style="margin-top:16px">另可透過「串流配置」設定邊際錄影要用的畫質。</p>
+      <figure class="shot">
+        <img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/edgerecode.jpg" alt="Surveillance Station 邊際錄影設定頁面：事件下拉選單，預設勾選「與 Synology 儲存系統中斷連線」">
+        <figcaption>實際畫面:Surveillance Station「邊際錄影」設定頁。事件預設勾選「與 Synology 儲存系統中斷連線」,也可改選動作／音訊／破壞／人車入侵等事件;上方並顯示 microSD 卡的使用量與取回進度。</figcaption>
+      </figure>
+    </section>
+
+    <!-- 02 retrieval -->
+    <section>
+      <h2><span class="n">02</span>錄影檔怎麼取回</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>連線恢復時取回:</b>連線一恢復,系統自動把卡片上的錄影取回並<b>合併</b>回 Surveillance Station。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>依排程取回:</b>也可在時間表上拖曳設定時段,於指定時間回傳(例如避開尖峰)。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>限制:</b>ONVIF 邊際儲存空間目前<b>不支援依排程取回</b>,且並非所有支援邊際錄影的攝影機都能使用。</p></div>
+      </div>
+    </section>
+
+    <!-- 03 important caveats -->
+    <section>
+      <h2><span class="n">03</span>使用前要知道的事</h2>
+      <div class="callout warn">
+        <h3>取回的錄影「不含事件標籤」</h3>
+        <p>取回後的錄影檔會標記為「<b>邊際儲存</b>」,<b>不包含任何事件偵測標籤</b>;因此<b>不會顯示在時間軸事件中,也無法依事件篩選</b>,僅能作為該時段的影像備份。</p>
+      </div>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>microSD 卡需求:</b>檔案系統 <b>exFAT</b>、格式化後最高支援 <b>128 GB</b>;建議 Class 10 / U1 / V10(寫入速度 ≥ 10MB/s)。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>用認證的卡:</b>請使用攝影機製造商認證的 microSD 卡,避免錄影檔取回發生問題。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>安裝方式依機型而異:</b>microSD 卡的安裝位置與方式請參閱該攝影機的產品使用手冊。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/Surveillance/tutorial/How_to_set_up_edge_recording_in_Surveillance_Station" target="_blank" rel="noopener noreferrer">Synology 知識中心:如何在 Surveillance Station 設定邊際錄影？</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文依 Synology 官方知識中心整理;是否支援邊際錄影、可用的觸發事件、取回方式與 microSD 需求會因攝影機型號、韌體、Surveillance Station 版本與授權而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

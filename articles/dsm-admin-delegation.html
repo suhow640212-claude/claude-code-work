@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSM 管理員角色委派</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* benefits */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .card .ic{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center}
+  .card .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.02rem;font-weight:700}
+  .card p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.7}
+
+  /* hierarchy */
+  .top{margin-top:22px;background:var(--accent);color:#fff;border-radius:14px;padding:16px 20px;box-shadow:var(--shadow);
+    display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;justify-content:space-between}
+  .top .who{font-weight:900;font-size:1.08rem}
+  .top .who small{font-weight:500;font-size:.84rem;opacity:.85;margin-left:8px}
+  .top .what{font-size:.9rem;opacity:.95}
+  .branch{height:22px;margin:0 auto;width:2px;background:var(--border-strong)}
+  .roles{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .rhead{display:grid;grid-template-columns:150px 1fr 1fr;gap:0 20px;
+    background:var(--surface-2);border-bottom:1px solid var(--border);padding:10px 20px;
+    font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.04em}
+  .role{display:grid;grid-template-columns:150px 1fr;gap:0 20px;padding:16px 20px;border-bottom:1px solid var(--border);align-items:start}
+  .role .pair{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+  .role .pair + .pair{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)}
+  .role:last-child{border-bottom:0}
+  .role .who{font-weight:900;font-size:1.02rem;line-height:1.5}
+  .role .job{display:inline-block;margin-top:4px;font-size:.78rem;color:var(--muted);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:6px;padding:0 8px}
+  .role .perm{display:block;font-weight:700;color:var(--lock);font-size:.96rem;line-height:1.5}
+  .role p{margin:4px 0 0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .role ul{margin:0;padding:0;list-style:none;display:grid;gap:5px}
+  .role li{font-size:.86rem;color:var(--ink);line-height:1.55;display:flex;gap:8px}
+  .role li::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--lock);flex:none;margin-top:8px}
+  .role .scope{display:none}
+  @media (max-width:640px){
+    .rhead{display:none}
+    .role{grid-template-columns:1fr;gap:10px}
+    .role .pair{grid-template-columns:1fr;gap:8px}
+    .role .scope{display:block;font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+    .role ul{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
+  }
+
+  figure.shot{margin:20px 0 0;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 系統管理 · DSM · #角色委派</p>
+      <h1>Synology DSM 管理員角色委派功能</h1>
+      <p class="lead">DSM 提供彈性的<b>管理角色委派</b>，可將預設角色委派給非管理員使用者，並設定指定使用者<b>僅能管理特定系統服務</b>。管理員能將自訂的角色委派予其他使用者，以節省 IT 資源的管理時間、降低管理工作量。</p>
+    </header>
+
+    <section>
+      <h2><span class="n">01</span>角色委派的效益</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 11l2 2 4-4"/></svg></span>
+          <h3>分層授權、各司其責</h3>
+          <p>依職務將不同管理權限指派給不同層級的人員，無須共用管理員帳號。</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <h3>最小權限原則</h3>
+          <p>受委派者僅能存取指定的系統功能，其他設定維持不可見、不可修改。</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <h3>減輕 IT 管理負擔</h3>
+          <p>帳號建立、資料夾權限、備份等例行工作可分派執行，IT 主管專注於整體規劃。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">02</span>角色委派架構示意</h2>
+      <p class="sec-sub">IT 主管可依組織層級分派管理權限，由 <b>MIS、經理、課長、委外系統整合商、職員</b>等各司其責。以下為各角色的委派權限與可存取範圍：</p>
+
+      <div class="top">
+        <span class="who">IT 主管<small>系統管理員</small></span>
+        <span class="what">具 Synology DSM 最高管理權，負責設定以下委派權限</span>
+      </div>
+      <div class="branch" aria-hidden="true"></div>
+
+      <div class="roles">
+        <div class="rhead"><span>角色</span><span>委派權限</span><span>存取範圍</span></div>
+        <div class="role">
+          <div><div class="who">MIS</div><span class="job">資訊系統管理</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">本地使用者與群組管理</span><p>建立、編輯、刪除本地使用者及群組，減輕 IT 管理員在人力資源管理上的負擔。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 使用者 &amp; 群組 › 使用者帳號</li><li>控制台 › 使用者 &amp; 群組 › 使用者群組</li></ul></div>
+            </div>
+            <div class="pair">
+              <div><span class="perm">目錄帳號與群組管理</span><p>編輯網域／LDAP 目錄使用者與群組，減輕 IT 管理員在人力資源管理上的負擔。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 網域 / LDAP › 網域 / LDAP</li><li>控制台 › 網域 / LDAP › 網域使用者及 LDAP 使用者</li><li>控制台 › 網域 / LDAP › 網域群組及 LDAP 群組</li></ul></div>
+            </div>
+          </div>
+        </div>
+        <div class="role">
+          <div><div class="who">部門主管</div><span class="job">經理</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">共用資料夾管理</span><p>擔任檔案伺服器管理員，管理共用資料夾，並為現有使用者或群組設定存取權限等例行工作。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 共用資料夾</li></ul></div>
+            </div>
+          </div>
+        </div>
+        <div class="role">
+          <div><div class="who">單位主管</div><span class="job">課長</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">存取控管</span><p>保護系統安全性並設定使用者存取限制，適合專責監控系統存取狀態、處理登入異常的資安人員。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 安全性 › 保護</li></ul></div>
+            </div>
+          </div>
+        </div>
+        <div class="role">
+          <div><div class="who">SI 委外<br>系統整合商</div><span class="job">監控系統</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">系統監控</span><p>可檢視系統狀態但無法更改任何設定，確保發生異常時能即時回報。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 資訊中心 › 一般、網路、儲存空間</li><li>資源監控（設定除外）</li></ul></div>
+            </div>
+          </div>
+        </div>
+        <div class="role">
+          <div><div class="who">職員</div><span class="job">專員</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">系統服務管理</span><p>協助管理已安裝的套件，提供更彈性的系統服務管理。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>控制台 › 應用程式權限</li><li>套件中心</li></ul></div>
+            </div>
+          </div>
+        </div>
+        <div class="role">
+          <div><div class="who">備份管理員</div><span class="job">專員</span></div>
+          <div>
+            <div class="pair">
+              <div><span class="perm">Hyper Backup 管理</span><p>在不中斷服務的情況下，監督、管理並執行日常備份任務。</p></div>
+              <div><span class="scope">存取範圍</span><ul><li>Hyper Backup</li></ul></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/subadmin.jpg" alt="Synology DSM 委派管理權限對照表：職等、職務、權限與存取範圍"><figcaption>Synology DSM 委派管理權限對照表</figcaption></figure>
+    </section>
+
+    <section>
+      <h2><span class="n">03</span>規劃建議</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span><p><b>依職責委派：</b>僅授予執行工作所需的最低權限，避免將完整管理員權限交付給非 IT 人員。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>委外人員以檢視權限為主：</b>系統整合商等外部人員建議僅委派「系統監控」，確保無法變更系統設定。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>定期檢視委派設定：</b>人員異動或職務調整時，應同步調整或撤銷其委派角色。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/DSM/AdminCenter/file_user_delegate?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心：委派</a>
+      </div>
+      <p class="note"><b>※ DSM 7.0 之後提供此功能。</b><br>※ 本文職等與角色對應為示意範例，實際請依組織需求規劃；可委派的角色與選項會因 DSM 版本而異，請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

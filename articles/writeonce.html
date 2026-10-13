@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synology WriteOnce</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* blocked actions */
+  .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+  .act{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);text-align:center}
+  .act .ic{width:42px;height:42px;border-radius:11px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;margin:0 auto 8px}
+  .act .ic svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .act b{display:block;font-size:.98rem}
+  .act span{font-size:.82rem;color:var(--muted)}
+  .act.ok .ic{background:var(--accent-soft);color:var(--accent-strong)}
+
+  /* modes */
+  .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .mode{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--lock);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .mode.reg{border-top-color:var(--danger)}
+  .mode h3{margin:0 0 4px;font-size:1.06rem;font-weight:800}
+  .mode .who{display:inline-block;font-size:.78rem;font-weight:700;border-radius:6px;padding:1px 8px;margin-bottom:8px;background:var(--lock-soft);color:var(--lock)}
+  .mode.reg .who{background:var(--danger-soft);color:var(--danger)}
+  .mode p{margin:0;color:var(--muted);font-size:.93rem}
+  .mode b{color:var(--ink)}
+  .mode .fit{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.86rem;color:var(--muted)}
+
+  /* lock states */
+  .states{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .st{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .st h3{margin:0 0 6px;font-family:"IBM Plex Mono",monospace;font-size:1.02rem;font-weight:500;color:var(--lock)}
+  .st p{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+  .st b{color:var(--ink)}
+  .file{font-family:"IBM Plex Mono",monospace;font-size:.78rem;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;line-height:1.7}
+  .file .ln{display:block;color:var(--muted)}
+  .file .ln.new{color:var(--accent-strong);font-weight:500}
+  .file .ln.lk::after{content:" 🔒";font-size:.7rem}
+  .file .no{display:block;margin-top:6px;color:var(--danger);font-weight:500}
+  .file .yes{display:block;margin-top:6px;color:var(--accent-strong);font-weight:500}
+
+  /* timeline */
+  .tl{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  .tl-row{display:grid;grid-template-columns:1fr 1.2fr 3fr;gap:4px}
+  .seg{border-radius:7px;padding:8px 10px;font-size:.82rem;font-weight:700;line-height:1.4}
+  .seg small{display:block;font-weight:400;font-size:.76rem;opacity:.9}
+  .seg.a{background:var(--surface-2);border:1px solid var(--border-strong);color:var(--ink)}
+  .seg.b{background:var(--warn-soft);color:var(--warn)}
+  .seg.c{background:var(--lock);color:#fff}
+  .tl-cap{margin:12px 0 0;font-size:.88rem;color:var(--muted)}
+  .tl-cap b{color:var(--ink)}
+  @media (max-width:560px){ .tl-row{grid-template-columns:1fr} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:620px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;
+    padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 資料保護 · WORM · #WriteOnce</p>
+      <h1>Synology WriteOnce 一次寫入，永久儲存</h1>
+      <p class="lead">全新 <b>WriteOnce 共用資料夾</b>能在定義的時間內<b>鎖定資料夾</b>，防止人為疏失或惡意事件造成資料修改或刪除，更支援<b>永久停用變更</b>，協助您從架構上實施資料保留策略。</p>
+      <div class="tags"><span>#WriteOnce</span><span>#一次寫入永久儲存</span><span>#WORM</span></div>
+    </header>
+
+    <!-- what -->
+    <section>
+      <h2><span class="n">01</span>WriteOnce 的保護效果</h2>
+      <p class="sec-sub">WriteOnce 基於 <b>WORM（Write Once, Read Many，單寫多讀）</b>技術：檔案寫入並鎖定後，在鎖定期間內只能讀取，無法被變更。</p>
+      <div class="acts">
+        <div class="act"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M4 4l16 16"/></svg></span><b>無法修改</b><span>檔案內容鎖定</span></div>
+        <div class="act"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span><b>無法刪除</b><span>防止誤刪或惡意刪除</span></div>
+        <div class="act"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h7M4 17h12"/><path d="M4 4l16 16"/></svg></span><b>無法重新命名</b><span>保留原始紀錄</span></div>
+        <div class="act ok"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><b>可正常讀取</b><span>開啟、下載不受影響</span></div>
+      </div>
+    </section>
+
+    <!-- modes -->
+    <section>
+      <h2><span class="n">02</span>兩種保護模式</h2>
+      <div class="modes">
+        <div class="mode">
+          <h3>企業模式</h3>
+          <span class="who">管理員可刪除</span>
+          <p>鎖定期間內檔案無法被修改或刪除，但<b>管理員</b>可刪除此共用資料夾，或其所在的儲存空間／儲存集區。</p>
+          <div class="fit">適合：企業內部資料保護，保留管理彈性</div>
+        </div>
+        <div class="mode reg">
+          <h3>法規模式</h3>
+          <span class="who">任何人皆無法刪除</span>
+          <p>鎖定期間內<b>沒有任何人可以刪除資料</b>，包含管理員在內。</p>
+          <div class="fit">適合：須符合法規要求的資料保存，例如財務、醫療、稽核紀錄</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- states -->
+    <section>
+      <h2><span class="n">03</span>兩種鎖定狀態</h2>
+      <div class="states">
+        <div class="st">
+          <h3>Immutable</h3>
+          <p>檔案<b>無法修改或刪除</b>，適用於合約、報表、影像等完成後不再變動的檔案。</p>
+          <div class="file">
+            <span class="ln lk">合約_2026.pdf</span>
+            <span class="no">✕ 修改　✕ 刪除　✕ 新增內容</span>
+          </div>
+        </div>
+        <div class="st">
+          <h3>Append-only</h3>
+          <p>既有內容<b>無法修改或刪除</b>，但可在<b>檔案尾端繼續新增資料</b>，適用於 Log 等持續累積的檔案。</p>
+          <div class="file">
+            <span class="ln lk">10:00 login admin</span>
+            <span class="ln lk">10:05 upload report.xlsx</span>
+            <span class="ln new">10:12 download contract.pdf ＋</span>
+            <span class="yes">✓ 尾端新增　✕ 修改既有內容</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- auto lock -->
+    <section>
+      <h2><span class="n">04</span>自動鎖定的運作方式</h2>
+      <p class="sec-sub">啟用 <b>自動鎖定</b>後，系統會依指定時間，鎖定<b>未再修改</b>的檔案。以下以設定範例（自動鎖定 2 小時、鎖定期間 3 年）說明：</p>
+      <div class="tl" role="img" aria-label="檔案寫入後 2 小時內可編輯，之後自動鎖定 3 年，期滿後解除鎖定">
+        <div class="tl-row">
+          <div class="seg a">寫入檔案<small>可正常編輯</small></div>
+          <div class="seg b">2 小時未再修改<small>觸發自動鎖定</small></div>
+          <div class="seg c">鎖定 3 年<small>無法修改、刪除、重新命名</small></div>
+        </div>
+        <p class="tl-cap">鎖定期間可選擇<b>自訂期間</b>（1 年 = 365 天）或<b>永久鎖定</b>；若選擇「立即鎖定」，檔案寫入後會立即進入鎖定狀態。</p>
+      </div>
+    </section>
+
+    <!-- steps -->
+    <section>
+      <h2><span class="n">05</span>設定步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>建立共用資料夾<span class="path">控制台 › 共用資料夾 › 新增</span></h3>
+          <p>於共用資料夾建立精靈輸入 <b>名稱</b>，並選擇 <b>所在位置</b>（範例為 Btrfs 儲存空間）。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/writeonce1.jpg" alt="共用資料夾建立精靈設定基本資訊，名稱一次寫入永久儲存，所在位置儲存空間1 Btrfs 已加密"><figcaption>設定基本資訊：名稱與所在位置。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>選擇透過 WriteOnce 保護</h3>
+          <p>於 <b>啟用額外的保護措施</b> 步驟選擇 <b>透過 WriteOnce 來保護此共用資料夾</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/writeonce2.jpg" alt="啟用額外的保護措施，選擇透過 WriteOnce 來保護此共用資料夾"><figcaption>選擇「透過 WriteOnce 來保護此共用資料夾」。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>了解兩種模式的差異</h3>
+          <p>WriteOnce 提供 <b>企業模式</b> 與 <b>法規模式</b>：企業模式可由管理員刪除共用資料夾或其所在的儲存空間／儲存集區；法規模式則沒有任何人可以刪除資料。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/writeonce3.jpg" alt="法規模式與企業模式比較：防篡改時鐘、寬限期、可追加模式、快照兩者皆支援，僅限管理員覆寫僅企業模式支援"><figcaption>法規模式與企業模式功能比較。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>設定模式、自動鎖定與鎖定狀態</h3>
+          <ul>
+            <li><b>模式</b>：範例選擇企業模式。</li>
+            <li><b>啟用自動鎖定</b>：範例為 2 小時未修改即自動鎖定，或選擇立即鎖定。</li>
+            <li><b>鎖定期間</b>：範例為 3 年，或選擇永久鎖定。</li>
+            <li><b>鎖定狀態</b>：Immutable（無法修改檔案）或 Append-only（可在檔案尾端繼續新增資料，例如 Log 檔案）。</li>
+          </ul>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/writeonce4.jpg" alt="WriteOnce 設定頁：模式企業模式、啟用自動鎖定 2 小時、鎖定期間 3 年、鎖定狀態 Immutable"><figcaption>WriteOnce 設定：企業模式、自動鎖定 2 小時、鎖定 3 年、Immutable。</figcaption></figure>
+          <div class="warn"><b>注意：</b>狀態為 Immutable 的檔案，只有在檔案沒有內容時才可轉換為 Append-only。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>確認 WriteOnce 共用資料夾</h3>
+          <p>建立完成後，資料夾名稱旁會出現 <b>WriteOnce</b> 標示，資訊欄位中也會顯示目前的模式（範例為企業模式）。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/writeonce5.jpg" alt="共用資料夾清單，一次寫入永久儲存旁出現 WriteOnce 標示，WriteOnce 企業模式"><figcaption>共用資料夾旁出現 WriteOnce 標示。</figcaption></figure>
+        </div></div>
+
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/DSM/AdminCenter/worm_share_edit?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心：WriteOnce 共用資料夾</a>
+      </div>
+      <p class="note"><b>※ DSM 7.2 之後提供此功能。</b><br>※ 本文為協助一般使用者理解的整理說明；功能選項與畫面會因 NAS 機種與 DSM 版本而異，實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

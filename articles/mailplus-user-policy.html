@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MailPlus 使用者規範</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --coral:#c4544c; --coral-soft:#fbe7e5;
+    --sky:#1b8fc7; --sky-soft:#dff1fa;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* policy groups */
+  .groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+  .gp{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .gp h3{margin:0 0 4px;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px}
+  .gp h3 i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .gp p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.65}
+  .gp .who{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+  .gp .who span{font-size:.76rem;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:1px 9px}
+
+  /* rule tables */
+  .rules{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .rules .rh{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surface-2);border-bottom:1px solid var(--border);font-weight:800}
+  .rules .rh svg{width:20px;height:20px;stroke:var(--accent-strong);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .rule{display:grid;grid-template-columns:28px 1fr 96px;gap:14px;padding:13px 18px;border-bottom:1px solid var(--border);align-items:start}
+  .rule:last-child{border-bottom:0}
+  .rule .no{font-family:"IBM Plex Mono",monospace;font-weight:500;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong);font-size:.84rem}
+  .rule b{display:block;font-size:.98rem}
+  .rule span{color:var(--muted);font-size:.88rem;line-height:1.65}
+  .rule .ex{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.86rem;font-weight:500;color:var(--coral)}
+  .rule .ex small{display:block;font-family:"Noto Sans TC",sans-serif;font-size:.72rem;color:var(--muted);font-weight:400}
+  @media (max-width:560px){ .rule{grid-template-columns:28px 1fr} .rule .ex{grid-column:2;text-align:left} }
+
+  figure.shot{margin:20px 0 2px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;
+    display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;box-shadow:var(--shadow)}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;width:30px;height:30px;border-radius:8px;
+    display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+  .step b{color:var(--ink)}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · 使用者規範</p>
+      <h1>Synology MailPlus Server 使用者規範－管理使用者「郵件傳送」及「服務使用」規則</h1>
+      <p class="lead">Synology MailPlus Server 的<b>使用者規範</b>可針對使用者或使用者群組，統一管理郵件伺服器的使用規則，包含<b>郵件傳送</b>限制與<b>服務</b>使用權限，依部門需求套用不同規範。</p>
+      <div class="tags"><span>#MailPlus使用者規範</span><span>#MailPlus</span></div>
+    </header>
+
+    <!-- concept -->
+    <section>
+      <h2><span class="n">01</span>依部門套用不同規範</h2>
+      <p class="sec-sub">可建立多個使用者規範，分別指派給不同的使用者或群組；未指派的使用者則套用 <b>預設規範</b>。範例中建立了「工程部」與「業務部」兩組規範：</p>
+      <div class="groups">
+        <div class="gp"><h3><i style="background:var(--sky)"></i>工程部</h3><p>依工程部門的郵件使用需求設定。</p><div class="who"><span>工程部群組</span></div></div>
+        <div class="gp"><h3><i style="background:var(--coral)"></i>業務部</h3><p>範例：每日寄送 100 封、流量 100MB、單一附件 10MB，並停用自動轉寄。</p><div class="who"><span>業務部群組</span></div></div>
+        <div class="gp"><h3><i style="background:var(--lock)"></i>預設規範</h3><p>套用於未指派其他規範的使用者。</p><div class="who"><span>其他使用者</span></div></div>
+      </div>
+    </section>
+
+    <!-- mail rules -->
+    <section>
+      <h2><span class="n">02</span>郵件傳送規則</h2>
+      <div class="rules">
+        <div class="rh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>郵件傳送</div>
+        <div class="rule"><span class="no">1</span><div><b>停用自動轉寄</b><span>禁止使用者將郵件自動轉寄至外部信箱，降低公司資料外流的風險。</span></div><span class="ex">是<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">2</span><div><b>每日寄送郵件限額</b><span>限制每位使用者每日可寄出的郵件數量，避免帳號遭盜用時大量發送垃圾郵件。</span></div><span class="ex">100 封<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">3</span><div><b>每日傳送郵件流量</b><span>限制每位使用者每日寄送郵件的總流量。</span></div><span class="ex">100 MB<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">4</span><div><b>單一附加檔案大小</b><span>限制單一附件的大小，避免大型檔案占用頻寬與信箱空間。</span></div><span class="ex">10 MB<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">5</span><div><b>限制僅可寄送郵件給內部使用者</b><span>啟用後，使用者僅能寄信給同一郵件伺服器內的使用者，無法寄信至外部。</span></div><span class="ex">否<small>業務部範例</small></span></div>
+      </div>
+    </section>
+
+    <!-- services -->
+    <section>
+      <h2><span class="n">03</span>服務規則</h2>
+      <div class="rules">
+        <div class="rh"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>服務</div>
+        <div class="rule"><span class="no">1</span><div><b>啟動 IMAP、POP3</b><span>決定使用者是否可透過 Outlook 等郵件用戶端，以 IMAP 或 POP3 收取郵件。</span></div><span class="ex">是<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">2</span><div><b>僅允許從區域網路登入</b><span>可分別針對 IMAP 與 POP3 設定，啟用後僅能在公司內部網路以郵件用戶端收信。</span></div><span class="ex">否<small>業務部範例</small></span></div>
+        <div class="rule"><span class="no">3</span><div><b>啟動全文檢索</b><span>允許使用者搜尋郵件內文，快速找到需要的郵件。</span></div><span class="ex">是<small>業務部範例</small></span></div>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">04</span>設定位置</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><p>開啟 <b>Synology MailPlus Server › 帳號 › 使用者規範</b>。</p></div>
+        <div class="step"><span class="bullet">2</span><p>按 <b>＋</b> 新增規範，設定郵件傳送與服務規則，並指派給使用者或使用者群組。</p></div>
+        <div class="step"><span class="bullet">3</span><p>選取規範後，右側會顯示目前的規則設定；可使用排序按鈕調整多個規範的優先順序。</p></div>
+      </div>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mail-user-rule.jpg" alt="Synology MailPlus Server 帳號使用者規範頁，列出工程部、業務部、預設規範，右側顯示業務部的郵件傳送與服務規則"><figcaption>Synology MailPlus Server - 帳號 › 使用者規範：業務部規則範例</figcaption></figure>
+      <div class="callout">
+        <h3>建議</h3>
+        <p>可先以 <b>預設規範</b> 設定全公司共通的限制，再為業務、工程等有特殊需求的部門建立專屬規範，便於統一管理。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/UG/Synology_MailPlus_Server_admin_guide_4/6" target="_blank" rel="noopener noreferrer">Synology 知識中心：Synology MailPlus Server 管理員指南</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；規範中的數值僅為範例，實際請依公司需求設定，並以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

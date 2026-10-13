@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>即時搜尋 · Instant Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --info:#2f6f9e; --info-soft:#e4eef6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* event panel mockup */
+  .panel{margin-top:24px;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+  .panel-title{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--border);
+    font-weight:700;font-size:.92rem;color:var(--ink);background:var(--surface-2)}
+  .panel-title svg{width:17px;height:17px;stroke:var(--accent-strong);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .f{font-size:.84rem;padding:5px 14px;border-radius:999px;border:1px solid var(--border);
+    background:var(--surface);color:var(--muted);font-weight:500}
+  .f.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .ev{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border)}
+  .ev:last-child{border-bottom:0}
+  .tg{font-weight:800;font-size:.8rem;padding:4px 0;border-radius:8px;white-space:nowrap;width:52px;text-align:center}
+  .tg.person{background:var(--accent-soft);color:var(--accent-strong)}
+  .tg.car{background:var(--info-soft);color:var(--info)}
+  .tg.motion{background:var(--warn-soft);color:var(--warn)}
+  .et{font-weight:700;color:var(--ink);font-size:.95rem;display:flex;flex-direction:column;min-width:0}
+  .et small{font-weight:400;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:.75rem;margin-top:2px}
+  .play{width:34px;height:34px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex:none}
+  .play svg{width:13px;height:13px;fill:#fff}
+  .panel-cap{padding:12px 16px;background:var(--surface-2);border-top:1px solid var(--border);
+    font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · Instant Search · #即時搜尋</p>
+      <h1>即時搜尋:人・車・動作,一鍵找到關鍵畫面</h1>
+      <p class="lead">Synology 系列網路攝影機會<strong>自動偵測並記錄「人・車・動作」</strong>事件。透過<strong>事件面板</strong>,你可以依類型快速篩選,<strong>一鍵跳到關鍵畫面立即回放</strong>——不必在長長的時間軸上大海撈針。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#即時搜尋</span><span>#InstantSearch</span><span>#SurveillanceStation</span><span>#AI攝影機</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/87Vp9-DGsaM"
+        title="Instant Search 人/車/動作偵測 即時搜尋－Synology AI 智慧影像網路攝影機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Instant Search 人/車/動作偵測 即時搜尋－Synology AI 智慧影像網路攝影機</b>　·　<a href="https://youtu.be/87Vp9-DGsaM" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- event panel mockup -->
+    <div class="panel" role="img" aria-label="事件面板示意:依人、車、動作篩選事件,每筆可一鍵回放。">
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h8M8 16h5"/></svg>
+        事件面板
+      </div>
+      <div class="filters">
+        <span class="f active">全部</span><span class="f">人</span><span class="f">車</span><span class="f">動作</span>
+      </div>
+      <div class="ev">
+        <span class="tg person">人</span>
+        <span class="et">偵測到人員<small>今日 09:14:22</small></span>
+        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+      </div>
+      <div class="ev">
+        <span class="tg car">車</span>
+        <span class="et">偵測到車輛<small>今日 09:02:51</small></span>
+        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+      </div>
+      <div class="ev">
+        <span class="tg motion">動作</span>
+        <span class="et">偵測到動作<small>今日 08:47:10</small></span>
+        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+      </div>
+      <div class="ev">
+        <span class="tg person">人</span>
+        <span class="et">偵測到人員<small>今日 08:33:05</small></span>
+        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+      </div>
+      <p class="panel-cap">點選類型即可篩出對應事件,每一筆都能直接按下回放。</p>
+    </div>
+
+    <!-- 01 how it works -->
+    <section>
+      <h2><span class="n">01</span>怎麼運作</h2>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+          <p class="ttl">自動偵測記錄</p>
+          <p class="ds">攝影機辨識人・車・動作並標記事件</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 10h12M10 15h4"/></svg></span>
+          <p class="ttl">事件面板篩選</p>
+          <p class="ds">依人・車・動作快速過濾</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span>
+          <p class="ttl">一鍵立即回放</p>
+          <p class="ds">直接跳到關鍵畫面播放</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 why -->
+    <section>
+      <h2><span class="n">02</span>為什麼找得又快又準</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>不必大海撈針:</b>省去在數小時時間軸上來回拖拉的時間。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>依類型鎖定:</b>只想看「車」或只想看「人」,一點就篩出來。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>事件已分類記錄:</b>偵測當下就標好類型與時間,事後查找一目了然。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>立即回放:</b>找到就按下播放,馬上看到你要的那一段。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/surveillance/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;可偵測的事件類型(人／車／動作)、事件面板操作與回放方式會因攝影機型號、Surveillance Station 版本與授權而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

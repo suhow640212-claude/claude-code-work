@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CC400W / CC410W 無線 AI 攝影機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* spec stat grid */
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:14px;margin-top:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .stat .v{font-weight:900;font-size:clamp(1.45rem,5.2vw,1.95rem);color:var(--accent-strong);line-height:1.1;letter-spacing:-.01em}
+  .stat .v small{font-size:.52em;font-weight:700;letter-spacing:.02em}
+  .stat .k{color:var(--muted);font-size:.84rem;margin-top:5px;font-weight:500}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step p{margin:0;color:var(--muted);font-size:.96rem}
+  .step b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · 無線 AI 攝影機 · #開箱設定</p>
+      <h1>CC400W / CC410W:無線 4MP AI 攝影機,開箱與初始設定</h1>
+      <p class="lead">Synology <strong>CC400W / CC410W</strong> 是<strong>無線(Wi-Fi)</strong>的 <strong>400 萬像素 AI 網路攝影機</strong>:4MP 30FPS 畫質、125° 廣角、IP65 防水,內建雙向語音與人車／入侵偵測,並符合美國 NDAA／TAA 標準。本篇帶你快速看重點規格與初始設定。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#CC400W</span><span>#CC410W</span><span>#AI攝影機</span><span>#無線攝影機</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/cgCs2mJnVlI"
+        title="Synology CC400W / CC410W 無線 400 萬像素 AI 網路攝影機 開箱及初始設定"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>CC400W / CC410W 無線 400 萬像素 AI 網路攝影機 開箱及初始設定</b>　·　<a href="https://youtu.be/cgCs2mJnVlI" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- spec stats -->
+    <div class="specs">
+      <div class="stat"><div class="v">4<small>MP</small></div><div class="k">400 萬像素</div></div>
+      <div class="stat"><div class="v">30<small>FPS</small></div><div class="k">流暢更新率</div></div>
+      <div class="stat"><div class="v">125°</div><div class="k">水平廣角</div></div>
+      <div class="stat"><div class="v">IP65</div><div class="k">防水防塵</div></div>
+      <div class="stat"><div class="v">Wi-Fi</div><div class="k">無線安裝</div></div>
+      <div class="stat"><div class="v">雙向</div><div class="k">語音對講</div></div>
+    </div>
+
+    <!-- 01 features -->
+    <section>
+      <h2><span class="n">01</span>重點特色</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 9h.01M8.5 14.5c1 1 2 1.5 3.5 1.5s2.5-.5 3.5-1.5"/></svg></span>
+          <h3>內建 AI 偵測</h3>
+          <p>攝影機端就能做<b>人車偵測、入侵偵測</b>,搭配 <b>Instant Search</b> 依人／車／動作快速調查事件。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg></span>
+          <h3>雙向語音</h3>
+          <p>內建麥克風與喇叭,可<b>即時對話</b>,也能做<b>遠端語音指引</b>或喝阻。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 13a7 7 0 0 1 14 0"/><path d="M2 10a11 11 0 0 1 20 0"/><circle cx="12" cy="18" r="1.6"/></svg></span>
+          <h3>無線彈性安裝</h3>
+          <p>以 <b>Wi-Fi</b> 連線,不必拉網路線,佈點位置更自由;IP65 防水也能用於戶外遮蔽處。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9.3 12l1.8 1.8 3.6-3.6"/></svg></span>
+          <h3>符合 NDAA / TAA</h3>
+          <p>符合美國 <b>NDAA / TAA</b> 相關法規標準,適合對供應鏈合規有要求的政府或企業場域。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 02 setup -->
+    <section>
+      <h2><span class="n">02</span>初始設定四步驟</h2>
+      <p class="sec-sub">詳細操作請見影片,流程大致如下:</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <p><b>開箱通電:</b>確認配件齊全,接上電源讓攝影機開機。</p></div>
+        <div class="step"><span class="num">2</span>
+          <p><b>連上網路:</b>依指引將攝影機以 <b>Wi-Fi</b> 連上你的網路。</p></div>
+        <div class="step"><span class="num">3</span>
+          <p><b>加入 Surveillance Station:</b>在 Synology NAS 的 Surveillance Station 搜尋並新增這支攝影機。</p></div>
+        <div class="step"><span class="num">4</span>
+          <p><b>設定錄影與偵測:</b>設定錄影排程、畫質,並開啟人車／入侵偵測等 AI 功能。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;實際規格(解析度、視角、防水等級、雙向語音、AI 項目、NDAA／TAA 認證等)與設定流程會因型號、韌體與 Surveillance Station 版本而異,實際請以 Synology 官方規格與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

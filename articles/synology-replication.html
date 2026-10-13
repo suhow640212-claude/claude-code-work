@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synology 複寫運作原理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --new:#c47a12; --new-soft:#fbefdc;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* spec */
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:20px}
+  .sp{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);text-align:center}
+  .sp .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:clamp(1.5rem,4vw,1.9rem);color:var(--accent-strong);line-height:1.2}
+  .sp .k{color:var(--muted);font-size:.88rem;margin-top:4px}
+
+  /* legend & blocks */
+  .legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;font-size:.88rem;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+  .b{display:inline-grid;place-items:center;width:38px;height:32px;border-radius:7px;
+    font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;flex:none;position:relative}
+  .b.w{background:var(--surface);border:2px solid var(--border-strong);color:var(--ink)}
+  .b.l{background:var(--lock);border:2px solid var(--lock);color:#fff}
+  .b.n{background:var(--new-soft);border:2px solid var(--new);color:var(--new)}
+  .b.s{background:var(--lock-soft);border:2px dashed var(--lock);color:var(--lock)}
+  .legend .b{width:28px;height:24px;font-size:.74rem}
+
+  /* replication stages */
+  .stages{display:grid;gap:14px;margin-top:20px}
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+  .stage > div{min-width:0}
+  .stage .num{font-family:"IBM Plex Mono",monospace;font-weight:500;width:32px;height:32px;border-radius:9px;
+    display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+  .stage h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .stage .desc{margin:0 0 12px;color:var(--muted);font-size:.95rem}
+  .stage .desc b{color:var(--ink)}
+  .sites{display:grid;grid-template-columns:1fr 132px 1fr;gap:10px;align-items:stretch}
+  .site{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .site .sh{font-size:.8rem;font-weight:700;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+  .site .sh::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent)}
+  .site.dst .sh::before{background:var(--lock)}
+  .row{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:center;margin-top:5px}
+  .row .lab{font-size:.78rem;font-weight:700;color:var(--muted);line-height:1.3}
+  .row .blocks{display:flex;flex-wrap:wrap;gap:5px}
+  .empty{font-size:.82rem;color:var(--muted);font-style:italic;margin:6px 0 0}
+  .xfer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+  .xfer .how{font-size:.78rem;font-weight:700;color:var(--accent-strong);line-height:1.35}
+  .xfer .pipe{display:flex;align-items:center;gap:4px;width:100%}
+  .xfer .pipe::before,.xfer .pipe::after{content:"";flex:1;height:2px;background:var(--accent)}
+  .xfer .pipe::after{flex:none;width:0;height:0;background:none;border-left:8px solid var(--accent);border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .xfer .pipe .blocks{display:flex;gap:3px}
+  .xfer .pipe .b{width:28px;height:24px;font-size:.72rem}
+  .xfer .idle{font-size:.78rem;color:var(--muted)}
+  .space{margin-top:10px;font-size:.86rem;color:var(--muted)}
+  .space b{color:var(--new);font-family:"IBM Plex Mono",monospace;font-weight:500}
+  @media (max-width:640px){
+    .stage{grid-template-columns:1fr;gap:10px}
+    .sites{grid-template-columns:1fr}
+    .xfer{flex-direction:row;justify-content:flex-start;padding:2px 4px}
+    .xfer .pipe{width:auto;flex-direction:column}
+    .xfer .pipe::before{width:2px;height:10px;flex:none}
+    .xfer .pipe::after{border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid var(--accent);border-bottom:0}
+  }
+
+  /* topology cards */
+  .topo{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+  .tcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .tcard svg{width:100%;height:auto;display:block;background:var(--surface-2);border:1px solid var(--border);border-radius:10px}
+  .tcard h3{margin:4px 0 0;font-size:1.02rem;font-weight:700}
+  .tcard p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.7}
+  .nas rect{fill:var(--surface);stroke:var(--border-strong);stroke-width:1.5}
+  .nas text{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .nas.p rect{stroke:var(--accent);stroke-width:2}
+  .nas .led{fill:var(--accent);stroke:none}
+  .lnk{stroke:var(--accent);stroke-width:2;fill:none}
+  .lnk2{stroke:var(--lock);stroke-width:2;fill:none}
+
+  /* failover modes */
+  .modes{display:grid;gap:12px;margin-top:20px}
+  .mode{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:150px 1fr;gap:6px 16px;align-items:start}
+  .mode h3{margin:0;font-size:1rem;font-weight:700}
+  .mode h3 small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.74rem;color:var(--muted)}
+  .mode p{margin:0;color:var(--muted);font-size:.93rem}
+  .mode b{color:var(--ink)}
+  .mode .when{display:inline-block;font-size:.76rem;font-weight:700;border-radius:6px;padding:0 8px;margin-bottom:4px}
+  .when.plan{background:var(--accent-soft);color:var(--accent-strong)}
+  .when.test{background:var(--lock-soft);color:var(--lock)}
+  .when.fail{background:var(--warn-soft);color:var(--warn)}
+  .when.force{background:var(--danger-soft);color:var(--danger)}
+  @media (max-width:560px){ .mode{grid-template-columns:1fr} }
+
+  /* compare table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:20px;background:var(--surface)}
+  table.cmp{width:100%;border-collapse:collapse;font-size:.92rem;min-width:560px}
+  .cmp th,.cmp td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  .cmp thead th{background:var(--surface-2);font-size:.86rem}
+  .cmp thead th.hl{color:var(--accent-strong)}
+  .cmp tbody th{font-weight:700;color:var(--muted);white-space:nowrap;font-size:.88rem}
+  .cmp td.hl{background:#f3faf9;color:var(--ink)}
+  .cmp tr:last-child th,.cmp tr:last-child td{border-bottom:0}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 資料保護 · Btrfs · #Replication</p>
+      <h1>Synology Replication 複寫如何運作</h1>
+      <p class="lead"><b>Snapshot Replication</b> 提供可設定排程且近乎同步的資料保護：在快照的基礎上，將資料複寫至另一台 Synology NAS，並支援多種複寫拓樸與服務轉移方式，大幅縮短備援系統的接手時間。</p>
+      <div class="spec">
+        <div class="sp"><div class="v">5 分鐘</div><div class="k">最短快照間隔</div></div>
+        <div class="sp"><div class="v">5 分鐘</div><div class="k">共用資料夾最短複寫間隔</div></div>
+        <div class="sp"><div class="v">15 分鐘</div><div class="k">LUN 最短複寫間隔</div></div>
+      </div>
+    </header>
+
+    <!-- principle -->
+    <section>
+      <h2><span class="n">01</span>運作原理：以快照為單位的增量複寫</h2>
+      <p class="sec-sub">第一次複寫時，系統會將來源端（A 機）的<b>所有磁區</b>完整複寫至目的端（B 機）；之後每次複寫<b>只傳送兩個快照之間有變動的磁區</b>，可於 A 機拍攝快照時立即複寫，或依複寫排程執行。由於傳輸量僅限於變動部分，即使高頻率複寫也不會大量占用網路頻寬。</p>
+      <p class="sec-sub" style="margin-top:10px">以下延續上一篇快照原理的範例，說明 A、B 兩台 NAS 之間的複寫過程：</p>
+
+      <div class="legend" aria-label="圖例">
+        <span><i class="b w">A</i>可寫入磁區</span>
+        <span><i class="b l">A</i>已鎖定（唯讀）</span>
+        <span><i class="b s">B</i>沿用既有磁區</span>
+        <span><i class="b n">D</i>新寫入／本次傳送的磁區</span>
+      </div>
+
+      <div class="stages">
+
+        <div class="stage"><span class="num">1</span><div>
+          <h3>初始狀態</h3>
+          <p class="desc">A 機的檔案由 <b>A、B、C</b> 三個磁區組成；B 機尚未有任何資料。</p>
+          <div class="sites">
+            <div class="site"><p class="sh">A 機（來源）</p>
+              <div class="row"><span class="lab">目前資料</span><span class="blocks"><i class="b w">A</i><i class="b w">B</i><i class="b w">C</i></span></div>
+            </div>
+            <div class="xfer"><span class="idle">尚未複寫</span></div>
+            <div class="site dst"><p class="sh">B 機（目的）</p><p class="empty">無資料</p></div>
+          </div>
+        </div></div>
+
+        <div class="stage"><span class="num">2</span><div>
+          <h3>第一次複寫：完整傳送</h3>
+          <p class="desc">A 機執行快照 1 後，將 <b>A、B、C 全部磁區</b>複寫至 B 機。這是唯一一次需要傳送完整資料的複寫。</p>
+          <div class="sites">
+            <div class="site"><p class="sh">A 機（來源）</p>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+            <div class="xfer"><span class="how">初始複寫</span><span class="pipe"><span class="blocks"><i class="b n">A</i><i class="b n">B</i><i class="b n">C</i></span></span></div>
+            <div class="site dst"><p class="sh">B 機（目的）</p>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+          </div>
+          <div class="space">傳送量：<b>A、B、C</b>（完整資料）</div>
+        </div></div>
+
+        <div class="stage"><span class="num">3</span><div>
+          <h3>修改 A、新增 D：快照時立即複寫</h3>
+          <p class="desc">A 機修改 A 產生新磁區 <b>A1</b>，並新增資料 <b>D</b>。執行快照 2 時立即複寫，<b>只需傳送 A1 與 D</b>；未變動的 B、C 在 B 機上直接沿用。</p>
+          <div class="sites">
+            <div class="site"><p class="sh">A 機（來源）</p>
+              <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b l">D</i></span></div>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+            <div class="xfer"><span class="how">快照時複寫</span><span class="pipe"><span class="blocks"><i class="b n">A1</i><i class="b n">D</i></span></span></div>
+            <div class="site dst"><p class="sh">B 機（目的）</p>
+              <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b l">D</i></span></div>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+          </div>
+          <div class="space">傳送量：僅 <b>A1、D</b>（變動部分）</div>
+        </div></div>
+
+        <div class="stage"><span class="num">4</span><div>
+          <h3>再次修改並新增：依複寫排程執行</h3>
+          <p class="desc">A1 再次被修改為 <b>A2</b>，並新增資料 <b>E</b>。於排程時間到達時拍攝快照 3 並複寫，同樣<b>只傳送 A2 與 E</b>。B 機因此保有與 A 機相同的各時間點快照。</p>
+          <div class="sites">
+            <div class="site"><p class="sh">A 機（來源）</p>
+              <div class="row"><span class="lab">快照 3</span><span class="blocks"><i class="b l">A2</i><i class="b s">B</i><i class="b s">C</i><i class="b s">D</i><i class="b l">E</i></span></div>
+              <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b l">D</i></span></div>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+            <div class="xfer"><span class="how">排程複寫</span><span class="pipe"><span class="blocks"><i class="b n">A2</i><i class="b n">E</i></span></span></div>
+            <div class="site dst"><p class="sh">B 機（目的）</p>
+              <div class="row"><span class="lab">快照 3</span><span class="blocks"><i class="b l">A2</i><i class="b s">B</i><i class="b s">C</i><i class="b s">D</i><i class="b l">E</i></span></div>
+              <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b l">D</i></span></div>
+              <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            </div>
+          </div>
+          <div class="space">傳送量：僅 <b>A2、E</b>（變動部分）</div>
+        </div></div>
+
+      </div>
+      <div class="callout">
+        <h3>重點</h3>
+        <p>複寫至 B 機的是<b>完整的快照版本</b>，而非單一份最新資料。A 機發生故障時，B 機可從任一已複寫的時間點接手服務，資料損失最多僅為<b>最後一次複寫之後</b>的變動。</p>
+      </div>
+    </section>
+
+    <!-- topology -->
+    <section>
+      <h2><span class="n">02</span>複寫拓樸</h2>
+      <p class="sec-sub">Snapshot Replication 支援多種複寫拓樸，可依不同情境靈活配置：</p>
+      <div class="topo">
+
+        <div class="tcard">
+          <svg viewBox="0 0 240 90" role="img" aria-label="主動/主動：兩台 NAS 互相複寫">
+            <g class="nas p"><rect x="20" y="25" width="64" height="40" rx="7"/><text x="52" y="45">NAS A</text></g>
+            <g class="nas p"><rect x="156" y="25" width="64" height="40" rx="7"/><text x="188" y="45">NAS B</text></g>
+            <path class="lnk" d="M88 38 H150" marker-end="url(#ah)"/>
+            <path class="lnk2" d="M152 54 H90" marker-end="url(#ah2)"/>
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0b7d74"/></marker>
+              <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2f6fb0"/></marker>
+            </defs>
+          </svg>
+          <h3>主動 / 主動</h3>
+          <p>兩台 NAS 皆提供服務，並<b>互相複寫</b>各自的共用資料夾，彼此互為備援。</p>
+        </div>
+
+        <div class="tcard">
+          <svg viewBox="0 0 240 90" role="img" aria-label="延伸複寫：A 複寫至 B，B 再複寫至 C">
+            <g class="nas p"><rect x="8" y="25" width="60" height="40" rx="7"/><text x="38" y="45">A</text></g>
+            <g class="nas"><rect x="90" y="25" width="60" height="40" rx="7"/><text x="120" y="45">B</text></g>
+            <g class="nas"><rect x="172" y="25" width="60" height="40" rx="7"/><text x="202" y="45">C</text></g>
+            <path class="lnk" d="M70 45 H86" marker-end="url(#ah)"/>
+            <path class="lnk" d="M152 45 H168" marker-end="url(#ah)"/>
+          </svg>
+          <h3>延伸複寫</h3>
+          <p>資料由 A 複寫至 B，再<b>由 B 接續複寫至 C</b>，適合本地備援加上異地備援的多層架構。</p>
+        </div>
+
+        <div class="tcard">
+          <svg viewBox="0 0 240 110" role="img" aria-label="一對多：A 同時複寫至 B、C、D">
+            <g class="nas p"><rect x="16" y="35" width="60" height="40" rx="7"/><text x="46" y="55">A</text></g>
+            <g class="nas"><rect x="166" y="5" width="60" height="28" rx="6"/><text x="196" y="19">B</text></g>
+            <g class="nas"><rect x="166" y="41" width="60" height="28" rx="6"/><text x="196" y="55">C</text></g>
+            <g class="nas"><rect x="166" y="77" width="60" height="28" rx="6"/><text x="196" y="91">D</text></g>
+            <path class="lnk" d="M78 50 L162 20" marker-end="url(#ah)"/>
+            <path class="lnk" d="M78 55 H162" marker-end="url(#ah)"/>
+            <path class="lnk" d="M78 60 L162 90" marker-end="url(#ah)"/>
+          </svg>
+          <h3>一對多</h3>
+          <p>同一份資料由來源端<b>同時複寫至多台 NAS</b>，分散存放於不同地點，提高資料安全性。</p>
+        </div>
+
+        <div class="tcard">
+          <svg viewBox="0 0 240 110" role="img" aria-label="Hub-to-spoke：多個分點複寫至中央主機">
+            <g class="nas"><rect x="14" y="5" width="60" height="28" rx="6"/><text x="44" y="19">分點 1</text></g>
+            <g class="nas"><rect x="14" y="41" width="60" height="28" rx="6"/><text x="44" y="55">分點 2</text></g>
+            <g class="nas"><rect x="14" y="77" width="60" height="28" rx="6"/><text x="44" y="91">分點 3</text></g>
+            <g class="nas p"><rect x="164" y="35" width="64" height="40" rx="7"/><text x="196" y="55">中央</text></g>
+            <path class="lnk" d="M76 20 L160 50" marker-end="url(#ah)"/>
+            <path class="lnk" d="M76 55 H160" marker-end="url(#ah)"/>
+            <path class="lnk" d="M76 90 L160 60" marker-end="url(#ah)"/>
+          </svg>
+          <h3>Hub-to-spoke</h3>
+          <p>多個分公司或據點的 NAS <b>集中複寫至總部的中央主機</b>，便於統一管理與集中備援。</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- failover -->
+    <section>
+      <h2><span class="n">03</span>服務轉移方式</h2>
+      <p class="sec-sub">當需要由 B 機接手服務時，Snapshot Replication 提供四種轉移方式：</p>
+      <div class="modes">
+        <div class="mode">
+          <h3>模擬轉移<small>Test Failover</small></h3>
+          <div><span class="when test">演練用</span><p>在<b>不中斷來源端服務、不影響複寫</b>的情況下，於目的端建立可讀寫的副本進行測試，用於定期驗證備援資料是否可用。</p></div>
+        </div>
+        <div class="mode">
+          <h3>交換轉移<small>Switchover</small></h3>
+          <div><span class="when plan">計畫性</span><p>來源端與目的端皆正常運作時，先同步最新資料後<b>互換兩端角色</b>，適用於主機維護、汰換或搬遷等計畫性作業。</p></div>
+        </div>
+        <div class="mode">
+          <h3>故障轉移<small>Failover</small></h3>
+          <div><span class="when fail">故障時</span><p>來源端發生異常時，由<b>目的端接手提供服務</b>，以最近一次複寫的資料繼續運作。</p></div>
+        </div>
+        <div class="mode">
+          <h3>強制故障轉移<small>Force Failover</small></h3>
+          <div><span class="when force">緊急狀況</span><p>來源端完全無法連線（例如機房斷電或網路中斷）時，<b>直接以目的端最後一份複寫快照接手</b>，確保服務能在最短時間內恢復。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- vs HA -->
+    <section>
+      <h2><span class="n">04</span>與 High Availability 的比較</h2>
+      <p class="sec-sub">Replication 大幅縮短了備援系統的接手時間。與 High Availability 相比，<b>不需要兩台相同規格的主機</b>，只要是支援 Btrfs 的機種並具備相當的容量，即可作為資料備援主機。</p>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th></th><th class="hl">Snapshot Replication</th><th>High Availability</th></tr></thead>
+          <tbody>
+            <tr><th>主機需求</th><td class="hl">支援 Btrfs 的機種，<b>不限相同型號</b>，具備相當容量即可</td><td>兩台相同型號（規格）的主機</td></tr>
+            <tr><th>資料同步</th><td class="hl">依排程複寫，共用資料夾最短 5 分鐘、LUN 最短 15 分鐘</td><td>兩台主機即時同步</td></tr>
+            <tr><th>服務切換</th><td class="hl">由管理者執行交換轉移或故障轉移</td><td>偵測到故障時自動切換</td></tr>
+            <tr><th>保留歷史版本</th><td class="hl">可，目的端保有各時間點快照</td><td>否，僅同步目前資料</td></tr>
+            <tr><th>部署位置</th><td class="hl">可本地或異地</td><td>通常位於同一地點</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/snapshot_replication" target="_blank" rel="noopener noreferrer">Synology：Snapshot Replication 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/Btrfs" target="_blank" rel="noopener noreferrer">Synology：Btrfs 檔案系統介紹</a>
+      </div>
+      <p class="note">※ 本文以簡化的磁區示意說明複寫原理，實際資料傳輸由 Btrfs 與 Snapshot Replication 管理；功能、拓樸與排程上限會因 NAS 機種與 DSM 版本而異，實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

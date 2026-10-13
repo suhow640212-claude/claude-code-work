@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Google Workspace 郵件移轉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+  a{color:var(--accent-strong)}
+
+  /* roadmap */
+  .road{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:20px}
+  .rn{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow);text-align:center}
+  .rn .k{display:block;font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--accent-strong);font-weight:500}
+  .rn b{font-size:.9rem;line-height:1.4;display:block;margin-top:2px}
+  .rn.done{background:var(--accent-soft);border-color:var(--accent)}
+  @media (max-width:640px){ .road{grid-template-columns:1fr 1fr} }
+
+  /* prep */
+  .prep{display:grid;gap:14px;margin-top:20px}
+  .pc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .pc h3{margin:0 0 6px;font-size:1.04rem;font-weight:700;display:flex;align-items:center;gap:10px}
+  .pc h3 i{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.82rem;font-weight:500;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn);flex:none}
+  .pc p{margin:0 0 8px;color:var(--muted);font-size:.95rem}
+  .pc p:last-child{margin-bottom:0}
+  .pc b{color:var(--ink)}
+  .pc a{text-decoration:none;border-bottom:1px solid var(--border-strong);font-weight:700}
+  .pc ol{margin:0 0 8px;padding-left:1.3em;color:var(--muted);font-size:.95rem}
+  .pc li{margin:0 0 6px}
+
+  /* csv */
+  .csv{margin:10px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .csv table{width:100%;border-collapse:collapse;font-size:.86rem}
+  .csv th,.csv td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+  .csv th{background:var(--surface-2);font-size:.78rem;color:var(--muted)}
+  .csv th small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--accent-strong)}
+  .csv td{font-family:"IBM Plex Mono",monospace}
+  .csv td.e{color:var(--border-strong);font-family:inherit;font-size:.8rem}
+  .csv tr:last-child td{border-bottom:0}
+  .raw{background:#17232e;color:#a9efe5;font-family:"IBM Plex Mono",monospace;font-size:.82rem;border-radius:9px;padding:10px 14px;line-height:1.7;margin:8px 0}
+  .raw small{display:block;color:#9aabb8;font-family:"Noto Sans TC",sans-serif;font-size:.74rem}
+  .imp{background:var(--danger-soft);color:var(--danger);border-radius:8px;padding:8px 12px;font-size:.9rem;margin:8px 0}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;
+    padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+  .inc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .inc span{font-size:.82rem;background:var(--lock-soft);color:var(--lock);border-radius:7px;padding:3px 10px;font-weight:700}
+  .inc i{font-style:normal;color:var(--muted)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .seealso{margin:14px 0 0;font-size:.9rem;color:var(--ink)}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Google Workspace 移轉 · 郵件移轉篇</p>
+      <h1>Google Workspace to Synology MailPlus Server 無痛移轉工具－郵件移轉篇</h1>
+      <p class="lead">Synology MailPlus Server 內建 <b>5 個免費帳號授權</b>，並提供移轉工具協助轉換平台。取得 Google 服務金鑰後，即可透過 MailPlus 介面進行郵件移轉，本文提供中文圖文操作步驟。</p>
+      <div class="road">
+        <div class="rn done"><span class="k">金鑰篇</span><b>取得服務金鑰</b></div>
+        <div class="rn"><span class="k">STEP 1</span><b>建立轉移任務</b></div>
+        <div class="rn"><span class="k">STEP 2</span><b>匯入使用者清單</b></div>
+        <div class="rn"><span class="k">STEP 3–4</span><b>通知設定與執行</b></div>
+        <div class="rn"><span class="k">STEP 5</span><b>切換至 MailPlus</b></div>
+      </div>
+    </header>
+
+    <!-- prep -->
+    <section>
+      <h2><span class="n">00</span>移轉前的準備</h2>
+      <div class="prep">
+        <div class="pc">
+          <h3><i>1</i>取得 Google 服務金鑰</h3>
+          <p>執行本篇步驟前，務必先完成服務金鑰的建立，請參考：<a href="https://hongku.com.tw/google-workspace-to-mailplus-key/" target="_blank" rel="noopener noreferrer">Google Workspace to Synology MailPlus Server 無痛移轉工具－金鑰篇</a>。</p>
+        </div>
+        <div class="pc">
+          <h3><i>2</i>調整帳號類型</h3>
+          <p>Synology MailPlus 及 Synology Contacts 的帳號類型，須與目的地帳號類型相符。例如：目的地帳號為 <b>DSM 本地使用者</b>，則須確認 Synology MailPlus 及 Synology Contacts 目前的帳號類型亦為本地使用者。</p>
+        </div>
+        <div class="pc">
+          <h3><i>3</i>準備使用者清單（CSV）</h3>
+          <p>建立一份使用者清單，列出 Google Workspace 帳號及其對應的目的地帳號：</p>
+          <ol>
+            <li>使用 Microsoft Excel 或 OpenOffice 建立 CSV 檔案。</li>
+            <li>將每位使用者的資訊由左至右填入下列三欄。</li>
+            <li>儲存 CSV 檔案，例如命名為 <b>userlist.csv</b>。</li>
+          </ol>
+          <div class="csv">
+            <table>
+              <thead><tr><th>Google Workspace 帳號<small>來源郵件地址</small></th><th>Google Workspace 密碼<small>可留白</small></th><th>MailPlus 帳號<small>目的地帳號</small></th></tr></thead>
+              <tbody>
+                <tr><td>yuki@example.com</td><td class="e">（留白）</td><td>yuki</td></tr>
+                <tr><td>jack@example.com</td><td class="e">（留白）</td><td>jack</td></tr>
+                <tr><td>selma@example.com</td><td class="e">（留白）</td><td>selma</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="raw"><small>CSV 檔案內容（以逗號分隔）</small>yuki@example.com,,yuki<br>jack@example.com,,jack<br>selma@example.com,,selma</div>
+          <p><b>Google Workspace 密碼</b>：因已透過服務金鑰取得授權，此欄位可以留白。<br><b>MailPlus 帳號</b>：本地使用者請輸入帳號名稱；LDAP 或網域使用者請輸入完整名稱（例如 <code>domain\user1</code> 或 <code>user1@domain</code>）。</p>
+          <div class="imp"><b>重要：</b>同一份清單上的使用者，須為同一種 DSM 帳號類型。</div>
+          <p>亦可下載 <a href="https://synostatic.synology.com/kb/csv/userlist_mailplus.csv" target="_blank" rel="noopener noreferrer">CSV 範本</a> 進行編輯。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- steps -->
+    <section>
+      <h2><span class="n">01</span>郵件移轉步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>建立轉移任務<span class="path">MailPlus Server › 伺服器管理 › 郵件移轉 › 新增</span></h3>
+          <p>於 <b>一般</b> 頁籤填入以下資訊：</p>
+          <ul>
+            <li><b>任務名稱</b>：輸入任務名稱。</li>
+            <li><b>選擇伺服器類型</b>：設為 Google Workspace。</li>
+            <li><b>Google Workspace 服務金鑰</b>：上傳金鑰篇中下載的 JSON 服務金鑰。</li>
+          </ul>
+          <p>亦可進一步指定 <b>各時段移轉的帳號數</b>，並勾選 <b>訂定電子郵件移轉排程</b> 設定任務時間。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-migra-1.jpg" alt="MailPlus Server 郵件移轉轉移設定一般頁籤，任務名稱 Google Workspace，上傳 Google Workspace 服務金鑰，各時段移轉的帳號數 5"><figcaption>轉移設定 › 一般：上傳 Google Workspace 服務金鑰。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>匯入使用者清單</h3>
+          <p>於 <b>使用者帳號列表</b> 頁籤按 <b>匯入</b>，選擇準備好的 CSV 檔案；再按 <b>檢查</b>，確認每個帳號的結果皆為 <b>通過</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-migra-2.jpg" alt="轉移設定使用者帳號列表，匯入四個來源帳號與對應 MailPlus 帳號，結果皆為通過"><figcaption>使用者帳號列表：匯入後檢查，結果皆為「通過」。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>管理通知設定</h3>
+          <p>於 <b>通知設定</b> 頁籤，可決定 MailPlus Server 是否寄送各帳號的轉移結果（成功或失敗），以及通知寄往來源帳號、對應的 MailPlus 帳號、系統管理員或指定的電子郵件帳號。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-migra-3.jpg" alt="轉移設定通知設定頁籤，寄送成功與失敗通知訊息至來源帳號、對應的 MailPlus 帳號與系統管理員"><figcaption>通知設定：成功與失敗通知的寄送對象。</figcaption></figure>
+          <div class="warn"><b>注意：</b>須於 <b>服務 › 通訊協定</b> 中勾選啟用 SMTP，才能傳送通知訊息。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>執行轉移任務<span class="path">伺服器管理 › 郵件移轉 › 選取任務 › 開始</span></h3>
+          <p>MailPlus Server 使用<b>增量轉移</b>技術，可同步郵件及郵件匣的每一筆變動，因此使用者在轉移過程中仍可持續使用 Google Workspace 的郵件服務。</p>
+          <div class="inc"><span>Google Workspace 持續收發</span><i>→ 增量同步 →</i><span>MailPlus Server</span></div>
+          <p>選取剛建立的任務，按上方工具列的 <b>開始</b> 即可執行。任務執行期間：</p>
+          <ul>
+            <li>按 <b>詳細資訊</b>（文件圖示）查看統計資料及日誌。</li>
+            <li>若要修改設定，請先按 <b>暫停</b> 停止任務，修改完成後再按 <b>開始</b> 繼續執行。</li>
+          </ul>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-migra-4.jpg" alt="MailPlus Server 郵件移轉任務 Google Workspace 狀態正在執行任務"><figcaption>郵件移轉任務「正在執行任務」。</figcaption></figure>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-migra-5.jpg" alt="詳細資訊任務摘要，狀態完成移轉，4/4 個電子郵件帳號已移轉，失敗數量 0，下方為移轉日誌"><figcaption>詳細資訊：4/4 個電子郵件帳號已移轉，失敗數量 0。</figcaption></figure>
+          <p>依帳號及郵件數量而定，轉移任務可能持續數天甚至數週。轉移<b>不會清除</b>目的地帳號在 MailPlus Server 上的既有資料。</p>
+          <div class="warn"><b>重要：</b>為避免轉移發生錯誤，請勿於 MailPlus Server 更改 IMAP 或 POP3 設定，或於 Google Workspace 移動或刪除郵件。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>切換至 MailPlus Server</h3>
+          <p>正式從 Google Workspace 切換至 MailPlus Server 之前，須先執行轉移任務，確保所有使用者的郵件皆已完整轉移。轉移完成後，即可將郵件服務切換至 MailPlus Server，例如將網域的 <b>MX 記錄</b>指向 MailPlus Server。</p>
+        </div></div>
+
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Google_Workspace_migration_guide" target="_blank" rel="noopener noreferrer">Synology 知識中心：將 Google Workspace 的組織資料轉移至 Synology MailPlus、Contacts、Calendar</a>
+      </div>
+      <p class="seealso">參考金鑰篇：<a href="https://hongku.com.tw/google-workspace-to-mailplus-key/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/google-workspace-to-mailplus-key/</a></p>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；轉移所需時間會因帳號與郵件數量而異，實際功能與畫面請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

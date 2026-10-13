@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>入侵偵測 · BC/TC500</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#b06a1a; --warn-soft:#fbf0e0;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* virtual fence diagram */
+  .fence{margin-top:24px;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+  .fence .scene{position:relative;display:flex;min-height:clamp(156px,36vw,210px)}
+  .fence .half{flex:1;position:relative;display:grid;place-items:center;padding:10px}
+  .fence .safe{background:var(--surface-2)}
+  .fence .danger{background:repeating-linear-gradient(45deg,var(--danger-soft) 0 11px,transparent 11px 22px),var(--surface)}
+  .fence .ztag{font-weight:800;font-size:clamp(.85rem,2.6vw,1.02rem);letter-spacing:.02em}
+  .fence .safe .ztag{color:var(--muted)}
+  .fence .danger .ztag{color:var(--danger)}
+  .fence .line{position:absolute;left:50%;top:0;bottom:0;transform:translateX(-50%);border-left:3px dashed var(--danger);z-index:2}
+  .fence .linetag{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:3;
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;background:var(--danger);color:#fff;
+    padding:2px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+  .fence .arrow{position:absolute;top:54%;left:24%;width:42%;height:0;transform:translateY(-50%);
+    border-top:3px solid var(--accent-strong);z-index:2}
+  .fence .arrow::after{content:"";position:absolute;right:-1px;top:-7px;width:0;height:0;
+    border:7px solid transparent;border-left:9px solid var(--accent-strong);border-right:0}
+  .fence .dot{position:absolute;top:54%;left:50%;transform:translate(-50%,-50%);z-index:3;
+    width:15px;height:15px;border-radius:50%;background:var(--accent-strong);border:3px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  .fence .badge{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:4;
+    background:var(--danger);color:#fff;font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  .fence-cap{padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* vs compare */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+  .vs .col{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px 18px;box-shadow:var(--shadow);border-top:4px solid var(--accent)}
+  .vs .lbl{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.08em;
+    text-transform:uppercase;display:inline-block;padding:2px 10px;border-radius:999px;margin-bottom:10px;font-weight:500;
+    color:var(--accent-strong);background:var(--accent-soft)}
+  .vs h3{margin:0 0 8px;font-size:1.08rem;font-weight:800}
+  .vs p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.72}
+  .vs b{color:var(--ink)}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .vs{grid-template-columns:1fr}
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:8px 15px;font-size:.9rem;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:9px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex:none}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · AI 智慧偵測 · #入侵偵測</p>
+      <h1>入侵偵測:拉一道看不見的界線,越線就示警</h1>
+      <p class="lead">Synology <strong>BC500／TC500</strong> 等 AI 網路攝影機<strong>內建「入侵偵測」</strong>,搭配<strong>任何型號</strong>的 Synology 主機都能用。你在畫面上界定一道<strong>虛擬柵欄</strong>,只要有物件<strong>跨越</strong>這條線、闖進禁止區域,就立即觸發事件、提出警報。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#DVA</span><span>#BC500</span><span>#TC500</span><span>#入侵偵測</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/i_fN2P3MXTM"
+        title="入侵偵測－Synology BC/TC500 500萬像素AI網路攝影機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>入侵偵測－Synology BC/TC500 500萬像素AI網路攝影機</b>　·　<a href="https://youtu.be/i_fN2P3MXTM" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- virtual fence diagram -->
+    <div class="fence" role="img" aria-label="虛擬柵欄示意:畫面被一道虛擬界線分成一般區域與禁止進入區,物件跨越界線時觸發警報。">
+      <div class="scene">
+        <div class="half safe"><span class="ztag">一般區域</span></div>
+        <div class="half danger"><span class="ztag">禁止進入區</span></div>
+        <span class="line"></span>
+        <span class="linetag">虛擬柵欄</span>
+        <span class="arrow"></span>
+        <span class="dot"></span>
+        <span class="badge">跨越即觸發警報</span>
+      </div>
+      <p class="fence-cap">在畫面上拉出一道虛擬界線:物件一旦跨越、闖入禁止區域,立即觸發事件並提出警報。</p>
+    </div>
+
+    <!-- 01 what it is -->
+    <section>
+      <h2><span class="n">01</span>「入侵偵測」在做什麼?</h2>
+      <p class="sec-sub">它盯的不是整片畫面,而是你指定的那道界線與禁區——越線闖入,才算一次入侵。</p>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>界定虛擬柵欄:</b>在攝影機畫面上圈出禁止進入的邊界或區域。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>跨越即觸發:</b>有物件越過這道界線、闖進禁區,立刻產生事件並提出警報。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>AI 判斷、減少誤報:</b>辨識真正的入侵,而不是風吹、落葉、光影造成的畫面變化。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>可警報、也可查:</b>事件即時觸發行動規則,同時留存,日後能快速調閱該段畫面。</p></div>
+      </div>
+    </section>
+
+    <!-- 02 vs people/vehicle -->
+    <section>
+      <h2><span class="n">02</span>和「人車偵測」差在哪?</h2>
+      <p class="sec-sub">兩者都是 AI 智慧偵測,但看的重點不同,可以搭配使用。</p>
+      <div class="vs">
+        <div class="col">
+          <span class="lbl">人車偵測</span>
+          <h3>盯一塊「區域」</h3>
+          <p>看某個範圍內<b>有沒有人或車</b>出現、停留，重點是「目標是誰」。</p>
+        </div>
+        <div class="col">
+          <span class="lbl">入侵偵測</span>
+          <h3>盯一道「界線」</h3>
+          <p>看有沒有物件<b>跨越界線、闖進禁區</b>，重點是「有沒有越界」。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 edge AI, any NAS -->
+    <section>
+      <h2><span class="n">03</span>攝影機內建,任何 Synology 主機都能用</h2>
+      <p class="sec-sub">入侵判斷在攝影機內部完成,主機只負責收下已經篩選過的事件——不必 DVA 專用主機,也不挑 NAS 等級。</p>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+          <p class="ttl">BC500／TC500</p>
+          <p class="ds">內建 AI,當場判斷是否越界</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 9v6l-4-2v-4z"/></svg></span>
+          <p class="ttl">只送出「入侵」事件</p>
+          <p class="ds">雜訊與誤觸不打擾主機</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/></svg></span>
+          <p class="ttl">任何 Synology 主機</p>
+          <p class="ds">Surveillance Station 接收、錄影、通知</p>
+        </div>
+      </div>
+      <div class="callout">
+        <h3>關於 DVA</h3>
+        <p>入侵偵測是深度影像分析(<b>DVA</b>)的經典應用。BC500／TC500 把這套 AI <b>內建在攝影機端</b>,因此<b>不必 DVA 系列主機</b>、搭配任何 Synology NAS 就能啟用;若另有 DVA 主機,則能進一步對其他攝影機進行分析。</p>
+      </div>
+    </section>
+
+    <!-- 04 scenarios + response -->
+    <section>
+      <h2><span class="n">04</span>越線之後:警報與常見場景</h2>
+      <p class="sec-sub">偵測到入侵,交給「行動規則」立即反應——發送事件通知、連動現場喇叭<b>語音嚇阻</b>(音訊輸出),或觸發錄影、燈光等連動警報。</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>圍牆・周界翻越</span>
+        <span class="chip"><span class="dot"></span>倉庫・機房禁區</span>
+        <span class="chip"><span class="dot"></span>工地危險區</span>
+        <span class="chip"><span class="dot"></span>打烊後的店內</span>
+        <span class="chip"><span class="dot"></span>泳池・水池邊界</span>
+        <span class="chip"><span class="dot"></span>陽台・窗戶邊界</span>
+      </div>
+      <div class="callout">
+        <p><b>一句話:</b>入侵偵測負責「<b>看住界線</b>」,行動規則負責「<b>立刻反應</b>」,組成一套能在越界當下就示警的防護。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/surveillance/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹(BC500／TC500)</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;虛擬柵欄/禁區設定、可偵測的物件與行動規則可用的動作(通知、音訊輸出等)會因攝影機型號、Surveillance Station 版本與授權而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

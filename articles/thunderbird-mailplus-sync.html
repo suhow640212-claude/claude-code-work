@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thunderbird 同步 MailPlus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --vio:#5b4a9a; --vio-soft:#ece8f6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0 0 10px;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  h2 .tag{font-family:"IBM Plex Mono",monospace;font-size:.78rem;font-weight:500;border-radius:6px;padding:1px 9px;background:var(--lock-soft);color:var(--lock)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* overview map */
+  .map{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .mp{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .mp .pr{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.8rem;border-radius:6px;padding:1px 9px;background:var(--lock-soft);color:var(--lock)}
+  .mp h3{margin:8px 0 2px;font-size:1.02rem;font-weight:800}
+  .mp .how{font-size:.86rem;color:var(--muted);line-height:1.6}
+  .mp .how b{color:var(--ink)}
+  .mp .to{margin-top:8px;font-size:.8rem;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:3px 9px;display:inline-block}
+  @media (max-width:640px){ .map{grid-template-columns:1fr} }
+
+  /* global contacts diagram */
+  .gc{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px;
+    display:grid;grid-template-columns:1fr auto 1.2fr auto 1fr;gap:12px;align-items:center}
+  .gn{border-radius:12px;padding:14px;text-align:center;background:var(--surface-2);border:1px solid var(--border)}
+  .gn b{display:block;font-size:.95rem}
+  .gn span{font-size:.8rem;color:var(--muted);line-height:1.5;display:block}
+  .gn.mid{background:var(--accent-soft);border-color:var(--accent)} .gn.mid b{color:var(--accent-strong)}
+  .gn .cl{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .gn .cl i{font-style:normal;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px}
+  .ga{color:var(--accent-strong);font-weight:800;font-size:1.3rem;text-align:center}
+  @media (max-width:680px){ .gc{grid-template-columns:1fr} .ga{transform:rotate(90deg)} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .fields{display:grid;gap:0;margin:4px 0 10px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:8px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:.9rem}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-weight:700}
+  .fd .v{color:var(--muted)}
+  .fd code{font-family:"IBM Plex Mono",monospace;font-size:.84rem;color:var(--accent-strong)}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  .urls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 10px}
+  .urls div{border-radius:10px;padding:10px 12px;font-size:.88rem}
+  .urls b{display:block}
+  .urls span{color:var(--muted);font-size:.84rem}
+  .urls .u1{background:var(--vio-soft)} .urls .u1 b{color:var(--vio)}
+  .urls .u2{background:var(--lock-soft)} .urls .u2 b{color:var(--lock)}
+  @media (max-width:520px){ .urls{grid-template-columns:1fr} }
+
+  .tip{margin:12px 0 4px;background:var(--accent-soft);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .tip b{color:var(--accent-strong)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Thunderbird · IMAP / CardDAV / CalDAV</p>
+      <h1>Thunderbird 同步 Synology MailPlus 郵件／聯絡人＆行事曆</h1>
+      <p class="lead">除了 Outlook，免費開源的郵件軟體 <b>Thunderbird</b> 也是許多企業節省授權費用的選擇。本篇說明如何以 Thunderbird 透過 <b>IMAP</b> 收取 Synology MailPlus 郵件，並以附加元件 <b>CardBook</b> 與內建行事曆連線 <b>Synology Contacts</b> 與 <b>Synology Calendar</b>。</p>
+      <p class="lead">此外，不需在每台電腦匯入 ics 或 vcf 等靜態檔案；在 MailPlus 加入 AD 的環境下，由管理員新增<b>群組（全域）聯絡人</b>，即可如 Exchange 般自動同步至 Web、Outlook 與 Thunderbird。</p>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>同步項目一覽</h2>
+      <div class="map">
+        <div class="mp"><span class="pr">IMAP</span><h3>郵件</h3><div class="how">Thunderbird <b>帳號設定</b>直接連線 MailPlus</div><span class="to">→ Synology MailPlus</span></div>
+        <div class="mp"><span class="pr">CardDAV</span><h3>聯絡人</h3><div class="how">安裝附加元件 <b>CardBook</b></div><span class="to">→ Synology Contacts</span></div>
+        <div class="mp"><span class="pr">CalDAV</span><h3>行事曆</h3><div class="how">Thunderbird 內建行事曆新增<b>網路行事曆</b></div><span class="to">→ Synology Calendar</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">01</span>以 IMAP 收取 MailPlus 郵件<span class="tag">IMAP</span></h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>設定 IMAP 郵件伺服器<span class="path">Thunderbird › 帳號設定 › 伺服器設定</span></h3>
+          <p>於 Thunderbird 新增郵件帳號後，確認 <b>伺服器設定</b> 如下：</p>
+          <div class="fields">
+            <div class="fd"><span class="k">伺服器類型</span><span class="v">IMAP 郵件伺服器</span></div>
+            <div class="fd"><span class="k">伺服器名稱</span><span class="v">MailPlus 的郵件網域名稱，例如 <code>mail.example.com</code></span></div>
+            <div class="fd"><span class="k">Port</span><span class="v"><code>993</code></span></div>
+            <div class="fd"><span class="k">連線安全性</span><span class="v">SSL/TLS</span></div>
+            <div class="fd"><span class="k">認證方式</span><span class="v">普通密碼</span></div>
+          </div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-1.jpg" alt="Thunderbird 帳號設定伺服器設定，IMAP 郵件伺服器，Port 993，連線安全性 SSL/TLS，認證方式普通密碼"><figcaption>Thunderbird 伺服器設定：IMAP、Port 993、SSL/TLS。</figcaption></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">02</span>同步聯絡人與行事曆<span class="tag">CardDAV / CalDAV</span></h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>安裝 CardBook 附加元件<span class="path">Thunderbird › ☰ › 附加元件 › CardBook</span></h3>
+          <p>按 Thunderbird 右上角的 <b>☰</b> 選單，選擇 <b>附加元件</b>，搜尋並安裝 <b>CardBook</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-2.jpg" alt="Thunderbird 選單中的附加元件，已安裝 CardBook"><figcaption>☰ › 附加元件 › CardBook</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>取得 CardDAV 與 CalDAV 網址</h3>
+          <div class="urls">
+            <div class="u1"><b>聯絡人</b><span>Synology Contacts › 通訊錄 › ⋮ › CardDAV，複製 <b>CardDAV 用戶端</b> 網址，貼至 CardBook。</span></div>
+            <div class="u2"><b>行事曆</b><span>Synology Calendar › 行事曆 › ▾ › CalDAV 帳號設定，複製 <b>Thunderbird</b> 網址。</span></div>
+          </div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-3.jpg" alt="Synology Calendar 的 CalDAV 帳號設定 Thunderbird 網址，與 Synology Contacts 的 CardDAV 網址"><figcaption>Synology Calendar 與 Synology Contacts 中取得連線網址。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>於 Thunderbird 新增通訊錄與行事曆</h3>
+          <ul>
+            <li><b>聯絡人</b>：於 CardBook 新增遠端通訊錄，貼上 CardDAV 用戶端網址，輸入 DSM 帳號密碼。</li>
+            <li><b>行事曆</b>：於 Thunderbird 行事曆新增<b>網路上</b>的行事曆，貼上 Thunderbird 網址，輸入 DSM 帳號密碼，並可設定名稱、顏色與重新整理頻率。</li>
+          </ul>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-4.jpg" alt="Thunderbird 中的 CardBook 通訊錄清單與新增行事曆屬性視窗"><figcaption>Thunderbird：CardBook 通訊錄與行事曆設定。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>於 Synology Calendar 管理行程</h3>
+          <p>同步完成後，Thunderbird 與 Synology Calendar 網頁版的行事曆內容一致。網頁版可搜尋各行事曆關鍵字、以日／週／月檢視、於任何時間點直接建立活動，並管理每日待辦事項。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-5.jpg" alt="Synology Calendar 網頁版週檢視，標示搜尋、檢視切換、建立活動與待辦事項"><figcaption>Synology Calendar：搜尋、檢視切換、建立活動與待辦事項。</figcaption></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">03</span>由管理員集中管理群組聯絡人</h2>
+      <p class="sec-sub">在 MailPlus 加入 AD 的環境下，管理員可於 Synology Contacts 建立<b>群組通訊錄</b>，作為全公司共用的全域聯絡人，不需在每台電腦匯入靜態檔案，更新時也會自動同步。</p>
+      <div class="gc" role="img" aria-label="管理員在群組通訊錄新增聯絡人，自動同步至所有 MailPlus 帳號的 Web、Outlook 與 Thunderbird">
+        <div class="gn"><b>IT／管理人員</b><span>新增或更新聯絡人</span></div>
+        <span class="ga" aria-hidden="true">→</span>
+        <div class="gn mid"><b>群組通訊錄</b><span>Synology Contacts 中的全域聯絡人</span></div>
+        <span class="ga" aria-hidden="true">→</span>
+        <div class="gn"><b>所有 MailPlus 帳號</b><div class="cl"><i>Web</i><i>Outlook</i><i>Thunderbird</i></div></div>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>個人通訊錄與群組通訊錄</h3>
+          <ul>
+            <li><b>個人通訊錄</b>（我的聯絡人等）：僅出現在使用者自己的畫面。</li>
+            <li><b>群組通訊錄</b>：由 IT 或管理人員新增，自動同步至所有具權限的 MailPlus 帳號。</li>
+          </ul>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-6.jpg" alt="Synology Contacts 網頁，左側區分個人通訊錄與群組通訊錄"><figcaption>Synology Contacts：個人通訊錄與群組通訊錄。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>將聯絡人複製到群組通訊錄</h3>
+          <p>選取要共用的聯絡人，於選單中選擇 <b>複製</b>，在 <b>複製到</b> 視窗中選擇目標的群組通訊錄（也可按 <b>新增通訊錄</b> 建立新的群組通訊錄），按 <b>複製</b> 完成。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/mailplus-Thunderbird-7.jpg" alt="Synology Contacts 複製到視窗，選擇群組通訊錄並複製"><figcaption>複製聯絡人至群組通訊錄。</figcaption></figure>
+          <div class="tip"><b>效益：</b>聯絡人異動只需管理員在群組通訊錄更新一次，Web、Outlook、Thunderbird 皆會自動同步，免去逐台匯入 vcf 的維護負擔。</div>
+        </div></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_check_my_Synology_MailPlus_on_other_email_platforms" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何透過 Mozilla Thunderbird 及 Microsoft Outlook 查看 Synology MailPlus？</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；Thunderbird 與 CardBook 介面會因版本而異，實際請以各軟體與 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

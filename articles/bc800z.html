@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BC800Z 4K 變焦 AI 攝影機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* spec stat grid */
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 12px;box-shadow:var(--shadow);text-align:center}
+  .stat .v{font-weight:900;font-size:clamp(1.3rem,4.6vw,1.8rem);color:var(--accent-strong);line-height:1.1;letter-spacing:-.01em}
+  .stat .v small{font-size:.56em;font-weight:700;letter-spacing:.01em}
+  .stat .k{color:var(--muted);font-size:.82rem;margin-top:5px;font-weight:500}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* feature cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* spotlight (smoke) */
+  .spotlight{margin-top:20px;display:flex;gap:16px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--warn);
+    border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .spotlight .ic{width:46px;height:46px;border-radius:12px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;flex:none;margin:0}
+  .spotlight .bd h3{margin:0 0 6px;font-size:1.08rem;font-weight:800;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .spotlight .bd .tag{font-family:"IBM Plex Mono",monospace;font-size:.66rem;font-weight:700;
+    background:var(--warn-soft);color:var(--warn);padding:2px 9px;border-radius:999px}
+  .spotlight .bd p{margin:0;color:var(--muted);font-size:.95rem;line-height:1.72}
+  .spotlight .bd b{color:var(--ink)}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:8px 15px;font-size:.9rem;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:9px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · 4K 變焦 AI 攝影機 · #煙霧偵測</p>
+      <h1>BC800Z:4K 變焦 × 混合光夜視的戶外 AI 攝影機</h1>
+      <p class="lead">Synology <strong>BC800Z</strong> 是一款 <strong>4K 超高畫質</strong>、具<strong>光學變焦</strong>與<strong>混合白光／紅外</strong>夜視的戶外 AI 攝影機;邊緣 AI 可做車牌辨識、人車計數、入侵偵測、Instant Search 與 Auto Tracking。本片示範其中的<strong>煙霧偵測</strong>。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#BC800Z</span><span>#4K攝影機</span><span>#煙霧偵測</span><span>#AI攝影機</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/C0U1gabzNyQ"
+        title="Synology BC800Z AI 智慧混合光可變焦攝影機 煙霧偵測功能展示"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>BC800Z AI 智慧混合光可變焦攝影機 － 煙霧偵測功能展示</b>　·　<a href="https://youtu.be/C0U1gabzNyQ" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- spec stats -->
+    <div class="specs">
+      <div class="stat"><div class="v">4K</div><div class="k">3840×2160</div></div>
+      <div class="stat"><div class="v">變焦</div><div class="k">112°–47° 可調視角</div></div>
+      <div class="stat"><div class="v">31<small>m</small></div><div class="k">彩色夜視</div></div>
+      <div class="stat"><div class="v">1/1.8<small>″</small></div><div class="k">星光感光元件</div></div>
+      <div class="stat"><div class="v">IP66/67</div><div class="k">防塵・防水</div></div>
+      <div class="stat"><div class="v">IK10</div><div class="k">抗衝擊</div></div>
+    </div>
+
+    <!-- 01 features -->
+    <section>
+      <h2><span class="n">01</span>重點特色</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+          <h3>4K 超高畫質 × 光學變焦</h3>
+          <p><b>3840×2160</b> 高解析,鏡頭視角可從 <b>112.1° 調到 47.5°</b>,廣角與望遠兼得、細節更清楚。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.5A7.5 7.5 0 1 1 9.5 4a6 6 0 0 0 10.5 10.5z"/></svg></span>
+          <h3>卓越夜視效能</h3>
+          <p><b>1/1.8″ 星光感光元件</b>搭配<b>混合白光／紅外 LED</b>,最遠約 <b>31 公尺</b>彩色夜視。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11v2M10 11v2M13 11v2M16 11v2"/></svg></span>
+          <h3>邊緣車牌辨識</h3>
+          <p>內建車牌辨識,<b>無需額外授權</b>,直接在<b>攝影機端</b>運作。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9.3 12l1.8 1.8 3.6-3.6"/></svg></span>
+          <h3>防塵・防水・防衝擊</h3>
+          <p>戶外專用,具 <b>IP66／67</b> 防塵防雨與 <b>IK10</b> 抗衝擊等級。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 02 edge AI -->
+    <section>
+      <h2><span class="n">02</span>邊緣 AI 偵測與搜尋</h2>
+      <p class="sec-sub">偵測、搜尋到追蹤,全部在攝影機端完成。</p>
+      <div class="spotlight">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 21c-1.5-1.5 1.5-3 0-5s1.5-3.5 0-5"/><path d="M12 21c-1.5-1.5 1.5-3 0-5s1.5-3.5 0-5"/><path d="M17 21c-1.5-1.5 1.5-3 0-5s1.5-3.5 0-5"/></svg></span>
+        <div class="bd">
+          <h3>煙霧偵測 <span class="tag">本片示範</span></h3>
+          <p>攝影機 AI 能辨識畫面中的<b>煙霧</b>,在大範圍或戶外空間<b>及早發出警報</b>,爭取應變時間——特別適合倉儲、廠區、停車場等場域。</p>
+        </div>
+      </div>
+      <p class="sec-sub" style="margin-top:22px">同時內建的其他邊緣 AI:</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>人數與車輛計數</span>
+        <span class="chip"><span class="dot"></span>入侵偵測</span>
+        <span class="chip"><span class="dot"></span>Instant Search 快速搜尋</span>
+        <span class="chip"><span class="dot"></span>Auto Tracking 自動追蹤</span>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;實際規格(解析度、變焦範圍、夜視距離、防護等級、AI 項目等)會因型號、韌體與 Surveillance Station 版本而異,實際請以 Synology 官方規格為準。煙霧偵測為影像式輔助偵測,不能取代合格的消防與火災/煙霧偵測系統。</p>
+    </footer>
+  </main>
+</body>
+</html>

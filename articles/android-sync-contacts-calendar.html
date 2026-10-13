@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Android 同步聯絡人與行事曆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --vio:#5b4a9a; --vio-soft:#ece8f6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  h2 .tag{font-family:"IBM Plex Mono",monospace;font-size:.78rem;font-weight:500;border-radius:6px;padding:1px 9px}
+  .ct h2 .tag{background:var(--vio-soft);color:var(--vio)}
+  .ca h2 .tag{background:var(--lock-soft);color:var(--lock)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* overview */
+  .ov{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  .oc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .oc .pr{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.82rem;border-radius:6px;padding:1px 9px;display:inline-block}
+  .oc.k .pr{background:var(--vio-soft);color:var(--vio)} .oc.c .pr{background:var(--lock-soft);color:var(--lock)}
+  .oc h3{margin:6px 0 4px;font-size:1.02rem;font-weight:700}
+  .oc p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .oc .flow{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem}
+  .oc .flow i{font-style:normal;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:2px 8px}
+  .oc .flow b{color:var(--muted);font-weight:400}
+  @media (max-width:600px){ .ov{grid-template-columns:1fr} }
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .ct .step .bullet{background:var(--vio-soft);color:var(--vio)}
+  .ca .step .bullet{background:var(--lock-soft);color:var(--lock)}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 4px;color:var(--muted);font-size:.96rem}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  figure.shot{margin:12px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.phone img{max-width:260px;width:100%;border-radius:14px}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.2em;color:var(--muted);font-size:.94rem}
+  .callout li{margin:0 0 6px}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Android · CardDAV / CalDAV</p>
+      <h1>Android 同步 Synology Contacts 聯絡人＆Synology Calendar 行事曆</h1>
+      <p class="lead">使用 <b>Synology Contacts</b> 與 <b>Synology Calendar</b> 作為聯絡人及行事曆伺服器時，行動裝置須設定伺服器帳號才能同步。Android 系統未內建 CardDAV／CalDAV 帳號，須透過同步 App <b>DAVx⁵</b> 完成設定。本篇介紹 Android 與 Synology Contacts、Synology Calendar 的同步設定方法。</p>
+      <div class="tags"><span>#MailPlus</span><span>#Android</span><span>#DAVx5</span></div>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>設定流程</h2>
+      <p class="sec-sub">兩者設定方式相同：先於電腦取得伺服器網址，再於 DAVx⁵ 新增帳號並勾選要同步的項目。</p>
+      <div class="ov">
+        <div class="oc k"><span class="pr">CardDAV</span><h3>聯絡人</h3><p>Synology Contacts 與 Android「聯絡人」同步。</p>
+          <div class="flow"><i>取得 CardDAV 用戶端網址</i><b>→</b><i>DAVx⁵ 登入</i><b>→</b><i>勾選通訊錄</i></div></div>
+        <div class="oc c"><span class="pr">CalDAV</span><h3>行事曆</h3><p>Synology Calendar 與 Android「Google 日曆」同步。</p>
+          <div class="flow"><i>取得 Thunderbird 網址</i><b>→</b><i>DAVx⁵ 登入</i><b>→</b><i>勾選行事曆</i></div></div>
+      </div>
+    </section>
+
+    <section class="ct">
+      <h2><span class="n">01</span>同步聯絡人<span class="tag">CardDAV</span></h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟通訊錄的 CardDAV 設定<span class="path">Synology Contacts › 通訊錄 › ⋮ › CardDAV</span></h3>
+          <p>登入 Synology Contacts，在要同步的通訊錄右側按 <b>⋮</b>，選擇 <b>CardDAV</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-contact-sync-1.jpg" alt="Synology Contacts 網頁，通訊錄選單中的 CardDAV"><figcaption>Synology Contacts：通訊錄 › CardDAV</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>複製 CardDAV 用戶端網址</h3>
+          <p>複製 <b>CardDAV 用戶端</b> 欄位的網址，稍後於 Android 設定時使用。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-contact-sync-2.jpg" alt="CardDAV 帳號視窗，列出 iOS 與 CardDAV 用戶端網址"><figcaption>複製「CardDAV 用戶端」網址。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>以 DAVx⁵ 新增帳號</h3>
+          <p>從 Google Play 下載 <a href="https://play.google.com/store/apps/details?id=at.bitfire.davdroid" target="_blank" rel="noopener noreferrer">DAVx⁵</a>（付費 App），開啟後選擇 <b>用網址和帳號登入</b>，於 <b>根 URL</b> 輸入步驟 2 複製的網址，並輸入 <b>使用者帳號</b> 與 <b>密碼</b>（DSM 帳號與密碼）。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-contact-sync-3.jpg" alt="DAVx5 新增帳號，選擇用網址和帳號登入，輸入根 URL、使用者帳號與密碼"><figcaption>DAVx⁵：用網址和帳號登入。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>勾選要同步的通訊錄並同步</h3>
+          <p>開啟新增的帳號，於 <b>CARDDAV 聯絡人檔案</b> 頁籤勾選要同步的通訊錄（範例 My Contacts），按右下角的 <b>同步</b> 按鈕。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-contact-sync-4.jpg" alt="DAVx5 CARDDAV 聯絡人檔案，勾選 My Contacts，紅框標示同步按鈕"><figcaption>勾選通訊錄 → 同步</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>於 Android 聯絡人檢視</h3>
+          <p>同步完成後，即可在 Android 裝置的 <b>聯絡人</b> 中看到 <b>DAVx⁵ 通訊錄</b>，檢視 Synology Contacts 的聯絡人。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-contact-sync-5.jpg" alt="Android 聯絡人帳號清單，紅框標示 DAVx5 通訊錄"><figcaption>Android 聯絡人：DAVx⁵ 通訊錄</figcaption></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="ca">
+      <h2><span class="n">02</span>同步行事曆<span class="tag">CalDAV</span></h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟行事曆的 CalDAV 帳號設定<span class="path">Synology Calendar › 行事曆 › ▾ › CalDAV 帳號設定</span></h3>
+          <p>登入 Synology Calendar，在要同步的行事曆右側按 <b>▾</b>，選擇 <b>CalDAV 帳號設定</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-calendar-sync-1.jpg" alt="Synology Calendar 網頁，行事曆選單中的 CalDAV 帳號設定"><figcaption>Synology Calendar：行事曆 › CalDAV 帳號設定</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>複製 Thunderbird 網址</h3>
+          <p>複製 <b>Thunderbird</b> 欄位的網址，稍後於 Android 設定時使用。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-calendar-sync-2.jpg" alt="CalDAV 帳號設定視窗，列出 macOS/iOS 與 Thunderbird 網址"><figcaption>複製「Thunderbird」欄位的網址。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>以 DAVx⁵ 新增帳號</h3>
+          <p>開啟 DAVx⁵ 新增帳號，選擇 <b>用網址和帳號登入</b>，於 <b>根 URL</b> 輸入步驟 2 複製的 Synology Calendar 網址，並輸入 <b>使用者帳號</b> 與 <b>密碼</b>。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-calendar-sync-3.jpg" alt="DAVx5 新增帳號，選擇用網址和帳號登入"><figcaption>DAVx⁵：用網址和帳號登入。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>勾選要同步的行事曆並同步</h3>
+          <p>開啟新增的帳號，於 <b>CALDAV 行事曆檔案</b> 頁籤勾選要同步的行事曆，按右下角的 <b>同步</b> 按鈕。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-calendar-sync-4.jpg" alt="DAVx5 CALDAV 行事曆檔案頁籤，勾選行事曆，紅框標示同步按鈕"><figcaption>勾選行事曆 → 同步</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>於 Google 日曆檢視</h3>
+          <p>同步完成後，即可在 Android 裝置的 <b>Google 日曆</b> 檢視 Synology Calendar 的所有行事曆與活動，於手機上的變更也會同步至 Synology Calendar。</p>
+          <figure class="shot phone"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/android-calendar-sync-5.jpg" alt="Android Google 日曆月檢視，顯示同步的活動"><figcaption>Google 日曆中顯示 Synology Calendar 的活動。</figcaption></figure>
+        </div></div>
+      </div>
+      <div class="callout">
+        <h3>完成後</h3>
+        <ul>
+          <li>於任一端新增或修改聯絡人與活動，皆會透過 DAVx⁵ 同步至另一端。</li>
+          <li>若登入失敗，請確認網址、帳號密碼正確，並確認 Android 裝置可連線至 NAS（例如使用外部網域名稱與 HTTPS）。</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_Sync_Synology_Calendar_with_CalDAV_Clients" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何將 Synology Calendar 與 CalDAV 用戶端同步？</a>
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/How_to_use_CardDAV_to_sync_Synology_Contacts" target="_blank" rel="noopener noreferrer">Synology 知識中心：如何將 Synology Contacts 同步至 CardDAV 用戶端？</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；DAVx⁵ 為第三方付費 App，畫面會因版本與 Android 裝置而略有不同，實際請以官方說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surveillance 365 設定教學</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:10px;margin-top:24px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 15px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column}
+  .flow .node.hi{border-color:var(--accent);background:var(--accent-soft)}
+  .flow .node .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node.hi .ic{background:#fff}
+  .flow .node .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1.02rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;align-self:center;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  .flow-cap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step .st{font-weight:700;color:var(--ink);font-size:1rem;margin:0 0 2px}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">雲端影像監控 · 免主機 · #Surveillance365</p>
+      <h1>Surveillance 365:免主機上雲,攝影機這樣設定</h1>
+      <p class="lead">Synology <strong>Surveillance 365</strong> 是<strong>免主機</strong>的雲端監控平台:<strong>不必搭配錄影主機(NAS／NVR)</strong>,攝影機就能把影像<strong>直接上傳雲端</strong>儲存與管理。這篇帶你走過帳號設定、攝影機配對、雲端錄影規則,以及 AI 偵測的啟用——適合想簡化架構、降低硬體門檻的使用者。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#Surveillance365</span><span>#雲端監控</span><span>#免主機</span><span>#攝影機設定</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/wd-P5AAR_5g"
+        title="Synology Surveillance 365 攝影機設定教學"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Synology Surveillance 365 攝影機設定教學</b>　·　<a href="https://youtu.be/wd-P5AAR_5g" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- flow -->
+    <div class="flow" role="img" aria-label="Surveillance 365 架構:攝影機直接上傳雲端,再由手機或電腦觀看,中間不需要錄影主機。">
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+        <p class="ttl">攝影機</p>
+        <p class="ds">支援的網路攝影機</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node hi">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/><path d="M12 21v-8M12 13l-2.4 2.4M12 13l2.4 2.4"/></svg></span>
+        <p class="ttl">Surveillance 365 雲端</p>
+        <p class="ds">影像上傳、儲存與管理</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="14" height="10" rx="1.5"/><path d="M2 17h14"/><rect x="17" y="8" width="5" height="11" rx="1.5"/></svg></span>
+        <p class="ttl">手機／電腦</p>
+        <p class="ds">隨處登入觀看與管理</p>
+      </div>
+    </div>
+    <p class="flow-cap">影像直接上傳雲端,中間<b>不需要錄影主機(NAS／NVR)</b>。</p>
+
+    <!-- 01 setup steps -->
+    <section>
+      <h2><span class="n">01</span>設定四步驟</h2>
+      <p class="sec-sub">詳細操作請見影片,流程大致如下:</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <div><p class="st">帳號設定</p><p>建立或登入 Surveillance 365 帳號,完成基本設定。</p></div></div>
+        <div class="step"><span class="num">2</span>
+          <div><p class="st">攝影機配對</p><p>依指引把支援的攝影機配對、綁定到你的帳號。</p></div></div>
+        <div class="step"><span class="num">3</span>
+          <div><p class="st">雲端錄影規則</p><p>設定錄影時段、觸發事件,以及影像在雲端的儲存方式。</p></div></div>
+        <div class="step"><span class="num">4</span>
+          <div><p class="st">啟用 AI 偵測</p><p>開啟人／車、入侵等 AI 偵測功能,讓告警更精準。</p></div></div>
+      </div>
+    </section>
+
+    <!-- 02 why -->
+    <section>
+      <h2><span class="n">02</span>為什麼選 Surveillance 365</h2>
+      <div class="callout">
+        <p><b>免主機,就是最大差別:</b>傳統監控需要一台錄影主機(NAS／NVR)持續運作;Surveillance 365 把錄影與管理搬到雲端,省下主機的採購、擺放與維護。</p>
+      </div>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>降低硬體門檻:</b>不必採購與維護錄影主機,入門更簡單、成本更可預期。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>架構更簡單:</b>攝影機直接上雲,佈建與日後擴充都更容易。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>雲端儲存更安心:</b>影像存在雲端,就算現場設備失竊或損壞,紀錄也不易一起遺失。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>隨處查看:</b>用手機或電腦登入帳號,即可觀看即時畫面與回放。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;Surveillance 365 的帳號、配對、雲端錄影規則、AI 偵測與可用攝影機、方案內容會因地區、版本與授權而異,實際請以 Synology 官方文件與方案說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

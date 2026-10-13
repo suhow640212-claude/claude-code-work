@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail Server 安全機制：DMARC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* trio */
+  .trio{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+  .tc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .tc .nm{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.05rem;color:var(--lock)}
+  .tc h3{margin:2px 0 4px;font-size:.98rem;font-weight:700}
+  .tc p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .tc.dm{grid-column:1 / -1;border:2px solid var(--accent);background:linear-gradient(180deg,var(--accent-soft),var(--surface) 70%)}
+  .tc.dm .nm{color:var(--accent-strong)}
+  @media (max-width:560px){ .trio{grid-template-columns:1fr} }
+
+  figure.shot{margin:18px 0 2px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:760px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  /* policies */
+  .pol{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+  .pc{background:var(--surface);border:1px solid var(--border);border-top:4px solid;border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+  .pc .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.05rem}
+  .pc h3{margin:0;font-size:1rem;font-weight:700}
+  .pc p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .pc .lv{margin-top:auto;padding-top:8px;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .pc .lv i{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--border-strong)}
+  .pc .lv i.on{background:currentColor}
+  .pc.none{border-top-color:var(--lock)} .pc.none .v,.pc.none .lv{color:var(--lock)}
+  .pc.q{border-top-color:var(--warn)} .pc.q .v,.pc.q .lv{color:var(--warn)}
+  .pc.r{border-top-color:var(--danger)} .pc.r .v,.pc.r .lv{color:var(--danger)}
+  .pc .lv span{color:var(--muted)}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--ink)}
+  .step figure.shot{background:var(--surface-2);box-shadow:none}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .fields{display:grid;gap:0;margin:4px 0 10px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+  .fd{display:grid;grid-template-columns:90px 1fr;gap:14px;padding:9px 14px;border-bottom:1px solid var(--border);align-items:center}
+  .fd:last-child{border-bottom:0}
+  .fd .k{font-weight:700;font-size:.9rem}
+  .fd code{font-family:"IBM Plex Mono",monospace;font-size:.84rem;color:var(--accent-strong);word-break:break-all}
+  @media (max-width:520px){ .fd{grid-template-columns:1fr;gap:2px} }
+
+  /* decode */
+  .dec{display:grid;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .dec div{display:grid;grid-template-columns:200px 1fr;gap:14px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);align-items:center}
+  .dec div:last-child{border-bottom:0}
+  .dec code{font-family:"IBM Plex Mono",monospace;font-size:.84rem;font-weight:500;color:var(--ink);word-break:break-all}
+  .dec span{color:var(--muted);font-size:.9rem}
+  @media (max-width:560px){ .dec div{grid-template-columns:1fr;gap:2px} }
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+  .callout code{font-family:"IBM Plex Mono",monospace;font-size:.88em;color:var(--accent-strong)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .seealso{margin:14px 0 0;font-size:.9rem;color:var(--ink)}
+  .seealso + .seealso{margin-top:4px}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Mail Server 安全機制 · #DMARC</p>
+      <h1>Mail Server 安全機制－DMARC（以網域為基礎的郵件驗證、報告和一致性）</h1>
+      <p class="lead"><b>DMARC</b> 搭配寄件者原則架構（SPF）與網域金鑰識別郵件（DKIM）來驗證郵件寄件者，確保目的地電子郵件系統信任您網域傳送的郵件，並提供額外保護，防範詐騙與網路釣魚電子郵件。</p>
+      <div class="tags"><span>#MailPlus</span><span>#DMARC</span></div>
+    </header>
+
+    <!-- role -->
+    <section>
+      <h2><span class="n">01</span>DMARC 的角色</h2>
+      <p class="sec-sub">SPF 與 DKIM 負責驗證；DMARC 則協助收件方郵件系統決定，如何處理<b>未通過 SPF 或 DKIM 檢查</b>的您網域傳送的郵件。</p>
+      <div class="trio">
+        <div class="tc"><span class="nm">SPF</span><h3>驗證寄件來源 IP</h3><p>寄件 IP 是否為網域宣告允許的寄信來源。</p></div>
+        <div class="tc"><span class="nm">DKIM</span><h3>驗證郵件未遭竄改</h3><p>以公鑰驗證郵件標頭的簽章。</p></div>
+        <div class="tc dm"><span class="nm">DMARC</span><h3>決定驗證失敗時的處理方式，並回報結果</h3><p>由網域擁有者宣告政策（無、隔離、拒絕），收件端依政策處理可疑郵件，並定期將匯總報告寄回給網域擁有者。</p></div>
+      </div>
+      <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/dmarc-1.jpg" alt="DMARC 運作原理：寄件人寫信寄出，Mail Server 以 DKIM 加密後送達收件伺服器；收信端經標準驗證測試後驗證 DKIM、驗證 SPF，並採用適當的 DMARC 規則，結果為通過、隔離或拒絕，並定期將匯總報告寄給發件人"><figcaption>DMARC 運作原理（取自 dmarc.org，中譯）</figcaption></figure>
+    </section>
+
+    <!-- policies -->
+    <section>
+      <h2><span class="n">02</span>DMARC 政策的三種處理方式</h2>
+      <p class="sec-sub">DMARC 記錄中的 <b>p</b> 參數決定處理可疑電子郵件的方式：</p>
+      <div class="pol">
+        <div class="pc none">
+          <span class="v">p=none</span><h3>無</h3>
+          <p>不對郵件採取任何處置，僅將可疑郵件記錄於每日報告中。</p>
+          <span class="lv"><i class="on"></i><i></i><i></i><span>僅監控</span></span>
+        </div>
+        <div class="pc q">
+          <span class="v">p=quarantine</span><h3>隔離</h3>
+          <p>將郵件標示為垃圾郵件，並移至收件者的垃圾郵件資料夾中，收件者可以查看自己的垃圾郵件。</p>
+          <span class="lv"><i class="on"></i><i class="on"></i><i></i><span>中度</span></span>
+        </div>
+        <div class="pc r">
+          <span class="v">p=reject</span><h3>拒絕</h3>
+          <p>要求收件伺服器拒絕郵件，導致 SMTP 拒收郵件並將郵件退回給寄件伺服器。</p>
+          <span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i><span>最嚴格</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">03</span>設定步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>啟動 DMARC<span class="path">MailPlus Server › 安全性 › 認證</span></h3>
+          <p>於 <b>安全性 › 認證</b> 頁面的 DMARC 區塊勾選 <b>啟動 DMARC</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/dmarc-2.jpg" alt="Synology MailPlus Server 安全性認證頁，SPF、DKIM 已啟用，DMARC 區塊勾選啟動 DMARC"><figcaption>Synology MailPlus Server - 安全性 › 認證：啟動 DMARC</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>於 DNS Server 新增 TXT 記錄<span class="path">DNS Server › 轄區管理 › 編輯 › 資源記錄 › 新增 › TXT</span></h3>
+          <p>開啟 Synology DNS Server，於轄區管理編輯網域，新增一筆 TXT 記錄：</p>
+          <div class="fields">
+            <div class="fd"><span class="k">名稱</span><code>_dmarc</code></div>
+            <div class="fd"><span class="k">資訊</span><code>"v=DMARC1; p=none; rua=mailto:service@hongku.tw"</code></div>
+          </div>
+          <div class="dec">
+            <div><code>v=DMARC1</code><span>宣告為 DMARC 記錄。</span></div>
+            <div><code>p=none</code><span>政策為「無」：不對郵件採取任何處置，僅記錄於每日報告中。</span></div>
+            <div><code>rua=mailto:service@hongku.tw</code><span>每日匯總報告的收件信箱。</span></div>
+          </div>
+        </div></div>
+
+      </div>
+      <div class="callout">
+        <h3>建議</h3>
+        <p>初次導入可先使用 <code>p=none</code>，透過每日報告確認自家郵件皆能通過 SPF 與 DKIM 驗證後，再逐步調整為 <code>p=quarantine</code> 或 <code>p=reject</code>，以免正常郵件被誤判。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/UG/Synology_MailPlus_Server_admin_guide_3/3" target="_blank" rel="noopener noreferrer">Synology 知識中心：Synology MailPlus Server 管理員指南</a>
+        <a href="https://dmarc.org" target="_blank" rel="noopener noreferrer">DMARC.org</a>
+      </div>
+      <p class="seealso">參考 SPF 設定說明：<a href="https://hongku.com.tw/mail-server-spf/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-spf/</a></p>
+      <p class="seealso">參考 DKIM 設定說明：<a href="https://hongku.com.tw/mail-server-dkim/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-dkim/</a></p>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的網域名稱與信箱僅供示意，實際請依您的網域與郵件伺服器設定。</p>
+    </footer>
+  </main>
+</body>
+</html>

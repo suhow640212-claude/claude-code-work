@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synology 快照運作原理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --new:#c47a12; --new-soft:#fbefdc;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .qs{display:grid;gap:8px;margin:18px 0 0;padding:0;list-style:none}
+  .qs li{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;
+    font-size:.95rem;box-shadow:var(--shadow);display:flex;gap:10px;align-items:baseline}
+  .qs li::before{content:"Q";font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--accent-strong);flex:none}
+  .qs a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* requirement */
+  .req{margin-top:20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);
+    border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .req p{margin:0;color:var(--muted);font-size:.96rem;flex:1 1 300px}
+  .req b{color:var(--ink)}
+  .req a{flex:none;color:var(--accent-strong);font-weight:700;text-decoration:none;border:1px solid var(--accent);
+    border-radius:9px;padding:6px 14px;font-size:.9rem}
+  .req a:hover{background:var(--accent-soft)}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;font-size:.88rem;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+
+  /* block */
+  .b{display:inline-grid;place-items:center;width:40px;height:34px;border-radius:7px;
+    font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.92rem;flex:none;position:relative}
+  .b.w{background:var(--surface);border:2px solid var(--border-strong);color:var(--ink)}
+  .b.l{background:var(--lock);border:2px solid var(--lock);color:#fff}
+  .b.n{background:var(--new-soft);border:2px solid var(--new);color:var(--new)}
+  .b.s{background:var(--lock-soft);border:2px dashed var(--lock);color:var(--lock)}
+  .b.x{background:var(--danger-soft);border:2px solid var(--danger);color:var(--danger);text-decoration:line-through}
+  .legend .b{width:28px;height:24px;font-size:.74rem}
+  .b.l::after{content:"";position:absolute;top:-6px;right:-6px;width:13px;height:13px;border-radius:50%;
+    background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6fb0' stroke-width='3' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/9px no-repeat;
+    border:1px solid var(--lock)}
+  .legend .b.l::after{width:11px;height:11px;top:-5px;right:-5px;background-size:7px}
+
+  /* stage cards */
+  .stages{display:grid;gap:14px;margin-top:20px}
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+  .stage > div{min-width:0}
+  .stage .num{font-family:"IBM Plex Mono",monospace;font-weight:500;width:32px;height:32px;border-radius:9px;
+    display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+  .stage h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .stage .desc{margin:0 0 12px;color:var(--muted);font-size:.95rem}
+  .stage .desc b{color:var(--ink)}
+  .rows{display:grid;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .row{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center}
+  .row .lab{font-size:.84rem;font-weight:700;color:var(--muted);line-height:1.3}
+  .row .lab small{display:block;font-weight:400;font-size:.74rem}
+  .row.cur .lab{color:var(--ink)}
+  .row .blocks{display:flex;flex-wrap:wrap;gap:6px}
+  .row.disk{border-top:1px dashed var(--border-strong);padding-top:9px;margin-top:2px}
+  .space{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.86rem;color:var(--muted)}
+  .space b{color:var(--new);font-family:"IBM Plex Mono",monospace;font-weight:500}
+  .space .zero{color:var(--accent-strong)}
+  .space .free{color:var(--danger)}
+  .stage.hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow)}
+  @media (max-width:560px){
+    .stage{grid-template-columns:1fr;gap:10px}
+    .row{grid-template-columns:1fr;gap:4px}
+    .b{width:36px;height:31px}
+  }
+
+  /* time table */
+  .tt{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:4px}
+  .tt th,.tt td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .tt th{font-size:.8rem;color:var(--muted);font-weight:700}
+  .tt td:first-child{font-weight:700;white-space:nowrap}
+  .tt .blocks{display:flex;flex-wrap:wrap;gap:5px}
+  .tt .b{width:32px;height:27px;font-size:.8rem}
+  .tablewrap{overflow-x:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:4px 6px}
+
+  /* explain cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .card .ic{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center}
+  .card .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.02rem;font-weight:700}
+  .card p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.75}
+  .card b{color:var(--ink)}
+
+  /* ransomware flow */
+  .flow{display:flex;align-items:stretch;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:16px 14px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;gap:8px}
+  .flow .node .blocks{display:flex;justify-content:center;flex-wrap:wrap;gap:5px}
+  .flow .node .b{width:32px;height:27px;font-size:.8rem}
+  .flow .ttl{font-weight:800;font-size:.98rem;margin:0}
+  .flow .ds{color:var(--muted);font-size:.84rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;align-self:center;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:600px){ .flow{flex-direction:column} .flow .arr{transform:rotate(90deg)} }
+
+  /* spec */
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:20px}
+  .sp{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);text-align:center}
+  .sp .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:clamp(1.5rem,4vw,1.9rem);color:var(--accent-strong);line-height:1.2}
+  .sp .k{color:var(--muted);font-size:.88rem;margin-top:4px}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--warn);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--warn)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 資料保護 · Btrfs · #Snapshot</p>
+      <h1>Synology Snapshot 快照如何運作</h1>
+      <p class="lead">支援 <b>Btrfs 檔案系統</b>的 Synology NAS 採用先進的資料快照技術，可將檔案回復至任一已保存的時間點，且所需的儲存空間與運算資源遠低於傳統備份或磁區快照。本文說明 Synology 快照的運作原理，並解答以下常見問題：</p>
+      <ul class="qs">
+        <li><a href="#how">Synology 快照如何運作？</a></li>
+        <li><a href="#ransom">遭勒索病毒加密後，為何仍可回復至先前版本？</a></li>
+        <li><a href="#space">每次快照是否會增加等量的資料？刪除檔案後空間為何沒有釋放？</a></li>
+      </ul>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>使用前提</h2>
+      <div class="req">
+        <p>快照功能須使用<b>支援 Btrfs 檔案系統的 Synology NAS 機種</b>，且共用資料夾所在的儲存空間須格式化為 <b>Btrfs</b>（ext4 儲存空間無法使用快照）。</p>
+        <a href="https://www.synology.com/zh-tw/dsm/Btrfs" target="_blank" rel="noopener noreferrer">查看 Btrfs 介紹 →</a>
+      </div>
+    </section>
+
+    <!-- how -->
+    <section id="how">
+      <h2><span class="n">01</span>運作原理：寫入時複製（CoW）</h2>
+      <p class="sec-sub">Btrfs 快照基於 <b>寫入時複製（Copy-on-Write，CoW）</b>機制。執行快照時，系統並不會複製整份資料，而是將當下的磁區<b>鎖定為唯讀</b>；之後檔案若被修改，系統會<b>另外寫入一個新磁區</b>供修改使用，原磁區保持不變。因此，每一個快照都能完整保留拍攝當下的資料狀態。</p>
+      <p class="sec-sub" style="margin-top:10px">以下以一個由 A、B、C 三個磁區組成的檔案為例，逐步說明：</p>
+
+      <div class="legend" aria-label="圖例">
+        <span><i class="b w">A</i>可寫入磁區</span>
+        <span><i class="b l">A</i>已鎖定（唯讀）</span>
+        <span><i class="b s">B</i>沿用既有磁區（不占新空間）</span>
+        <span><i class="b n">D</i>本次新寫入的磁區</span>
+        <span><i class="b x">A</i>已釋放的磁區</span>
+      </div>
+
+      <div class="stages">
+
+        <div class="stage"><span class="num">1</span><div>
+          <h3>初始狀態</h3>
+          <p class="desc">檔案目前由 <b>A、B、C</b> 三個磁區組成，皆可自由讀寫。</p>
+          <div class="rows">
+            <div class="row cur"><span class="lab">目前資料</span><span class="blocks"><i class="b w">A</i><i class="b w">B</i><i class="b w">C</i></span></div>
+            <div class="row disk"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b w">A</i><i class="b w">B</i><i class="b w">C</i></span></div>
+          </div>
+        </div></div>
+
+        <div class="stage"><span class="num">2</span><div>
+          <h3>執行快照 1</h3>
+          <p class="desc">A、B、C 被<b>鎖定為唯讀</b>，成為快照 1 的內容。此時並未複製任何資料，因此<b>幾乎不增加儲存空間</b>，快照也能在瞬間完成。</p>
+          <div class="rows">
+            <div class="row cur"><span class="lab">目前資料</span><span class="blocks"><i class="b s">A</i><i class="b s">B</i><i class="b s">C</i></span></div>
+            <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            <div class="row disk"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+          </div>
+          <div class="space">新增空間：<b class="zero">0</b></div>
+        </div></div>
+
+        <div class="stage"><span class="num">3</span><div>
+          <h3>修改 A、新增資料 D</h3>
+          <p class="desc">由於 A 已被鎖定，修改時系統會<b>另寫一個新磁區 A1</b> 承接變更；新增的資料則寫入新磁區 <b>D</b>。未變動的 B、C 直接沿用，不重複占用空間。</p>
+          <div class="rows">
+            <div class="row cur"><span class="lab">目前資料</span><span class="blocks"><i class="b n">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b n">D</i></span></div>
+            <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            <div class="row disk"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i><i class="b n">A1</i><i class="b n">D</i></span></div>
+          </div>
+          <div class="space">新增空間：<b>A1</b>（修改產生）＋ <b>D</b>（新資料）</div>
+        </div></div>
+
+        <div class="stage"><span class="num">4</span><div>
+          <h3>執行快照 2</h3>
+          <p class="desc">A1、D 也被鎖定為唯讀。快照 2 的內容為 <b>A1、B、C、D</b>，其中 B、C <b>與快照 1 共用同一份磁區</b>，並未重複儲存。</p>
+          <div class="rows">
+            <div class="row cur"><span class="lab">目前資料</span><span class="blocks"><i class="b s">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b s">D</i></span></div>
+            <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b s">B</i><i class="b s">C</i><i class="b l">D</i></span></div>
+            <div class="row"><span class="lab">快照 1</span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></div>
+            <div class="row disk"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i><i class="b l">A1</i><i class="b l">D</i></span></div>
+          </div>
+          <div class="space">新增空間：<b class="zero">0</b></div>
+        </div></div>
+
+        <div class="stage hl"><span class="num">5</span><div>
+          <h3>再次修改並新增資料：三個時間點可供取用</h3>
+          <p class="desc">修改 A1 時系統再寫入新磁區 <b>A2</b>，新增資料寫入 <b>E</b>。此時共有三個時間點的資料可隨時取用或還原：</p>
+          <div class="tablewrap">
+            <table class="tt">
+              <thead><tr><th>時間點</th><th>資料內容</th></tr></thead>
+              <tbody>
+                <tr><td>目前資料（可讀寫）</td><td><span class="blocks"><i class="b n">A2</i><i class="b s">B</i><i class="b s">C</i><i class="b s">D</i><i class="b n">E</i></span></td></tr>
+                <tr><td>快照 2</td><td><span class="blocks"><i class="b l">A1</i><i class="b l">B</i><i class="b l">C</i><i class="b l">D</i></span></td></tr>
+                <tr><td>快照 1</td><td><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rows" style="margin-top:10px">
+            <div class="row disk" style="border-top:0;padding-top:0;margin-top:0"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i><i class="b l">A1</i><i class="b l">D</i><i class="b n">A2</i><i class="b n">E</i></span></div>
+          </div>
+          <div class="space">三個版本合計僅占用 <b style="color:var(--accent-strong)">7</b> 個磁區，而非 3＋4＋5＝12 個。</div>
+        </div></div>
+
+        <div class="stage"><span class="num">6</span><div>
+          <h3>刪除快照 1（手動刪除或保留策略自動輪替）</h3>
+          <p class="desc">只有 <b>快照 1 獨有的磁區 A</b> 會被釋放；B、C 仍被快照 2 使用，因此繼續保留。快照 2 的內容不受影響，依然完整。</p>
+          <div class="rows">
+            <div class="row cur"><span class="lab">目前資料</span><span class="blocks"><i class="b w">A2</i><i class="b s">B</i><i class="b s">C</i><i class="b s">D</i><i class="b w">E</i></span></div>
+            <div class="row"><span class="lab">快照 2</span><span class="blocks"><i class="b l">A1</i><i class="b l">B</i><i class="b l">C</i><i class="b l">D</i></span></div>
+            <div class="row disk"><span class="lab">實際占用<small>硬碟上的磁區</small></span><span class="blocks"><i class="b x">A</i><i class="b l">B</i><i class="b l">C</i><i class="b l">A1</i><i class="b l">D</i><i class="b w">A2</i><i class="b w">E</i></span></div>
+          </div>
+          <div class="space">釋放空間：<b class="free">A</b>（僅快照 1 獨有的磁區）</div>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- ransomware -->
+    <section id="ransom">
+      <h2><span class="n">02</span>為何可從勒索病毒攻擊中回復</h2>
+      <p class="sec-sub">勒索病毒加密檔案，本質上就是「<b>修改檔案內容</b>」。依照 CoW 機制，加密後的內容只會寫入<b>新的磁區</b>，快照中被鎖定為唯讀的原始磁區並不會被覆寫。</p>
+      <div class="flow">
+        <div class="node">
+          <p class="ttl">快照保存</p>
+          <span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span>
+          <p class="ds">原始磁區已鎖定為唯讀</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <p class="ttl">遭勒索病毒加密</p>
+          <span class="blocks"><i class="b x" style="text-decoration:none">A*</i><i class="b x" style="text-decoration:none">B*</i><i class="b x" style="text-decoration:none">C*</i></span>
+          <p class="ds">加密內容寫入新磁區，原始磁區不受影響</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <p class="ttl">從快照還原</p>
+          <span class="blocks"><i class="b l">A</i><i class="b l">B</i><i class="b l">C</i></span>
+          <p class="ds">取回感染前的時間點資料</p>
+        </div>
+      </div>
+      <div class="callout">
+        <h3>建議搭配不可變快照</h3>
+        <p>DSM 7.2 起，Snapshot Replication 支援 <b>不可變快照（Immutable Snapshot）</b>，在設定的保護期間內，即使具管理員權限的帳號也無法刪除或修改快照，可進一步防範攻擊者刪除快照後再加密資料。</p>
+      </div>
+    </section>
+
+    <!-- space -->
+    <section id="space">
+      <h2><span class="n">03</span>快照與儲存空間</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+          <h3>空間增加量的來源</h3>
+          <p>每次快照<b>不會</b>增加等量的資料。空間增加僅來自兩種情況：<b>①</b> 新複製到 NAS 的資料；<b>②</b> 修改既有檔案時新寫入的磁區。未變動的資料始終共用同一份。</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
+          <h3>刪除檔案後空間未釋放</h3>
+          <p>若檔案已被快照保存，刪除檔案只是從「目前資料」中移除，其磁區仍由快照占用。此時請檢查快照<b>保留的版本數量</b>是否過多，並調整保留策略。</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <h3>刪除快照後空間逐步回收</h3>
+          <p>刪除快照版本後，系統於背景回收磁區，可用空間會<b>逐漸增加</b>，與 Windows 刪除檔案後立即釋放空間的行為略有不同。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">04</span>啟用方式與規格</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span><p><b>須安裝套件：</b>快照功能由 <b>Snapshot Replication</b> 套件提供，請先至套件中心安裝。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>預設不會自動執行：</b>安裝後須針對共用資料夾設定<b>快照排程</b>與<b>保留策略</b>，快照才會開始運作。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>依資料性質設定頻率：</b>變動頻繁的工作目錄可提高頻率，封存性質的目錄可降低頻率，兼顧保護程度與空間使用。</p></div>
+      </div>
+      <div class="spec">
+        <div class="sp"><div class="v">5 分鐘</div><div class="k">共用資料夾最短快照排程</div></div>
+        <div class="sp"><div class="v">1,024 份</div><div class="k">每個共用資料夾快照上限</div></div>
+        <div class="sp"><div class="v">65,535 份</div><div class="k">整台系統快照總數上限</div></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/Btrfs" target="_blank" rel="noopener noreferrer">Synology：Btrfs 檔案系統介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/snapshot_replication" target="_blank" rel="noopener noreferrer">Synology：Snapshot Replication 功能介紹</a>
+      </div>
+      <p class="note">※ 本文以簡化的磁區示意說明 CoW 快照原理，實際資料配置由 Btrfs 檔案系統管理；功能與規格上限會因 NAS 機種與 DSM 版本而異，實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

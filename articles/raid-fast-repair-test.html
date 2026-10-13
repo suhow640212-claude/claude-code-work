@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAID 快速修復時間測試</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --off:#8a96a1; --off-soft:#eceff2;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* test info */
+  .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+  .ib{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow)}
+  .ib .k{font-size:.8rem;font-weight:700;color:var(--muted)}
+  .ib .v{font-size:1rem;font-weight:700;margin-top:2px;line-height:1.6}
+
+  /* result bars */
+  .bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:20px}
+  .bcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .bcard h3{margin:0 0 4px;font-size:1.02rem;font-weight:700}
+  .bcard .cond{margin:0 0 14px;font-size:.84rem;color:var(--muted)}
+  .bar{display:grid;grid-template-columns:76px 1fr;gap:10px;align-items:center;margin-top:8px}
+  .bar .lab{font-size:.84rem;font-weight:700;color:var(--muted)}
+  .bar .track{height:28px;background:var(--surface-2);border-radius:7px;position:relative}
+  .bar .fill{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding:0 9px;
+    font-family:"IBM Plex Mono",monospace;font-size:.84rem;font-weight:500;white-space:nowrap}
+  .bar.on .fill{background:var(--accent);color:#fff}
+  .bar.off .fill{background:var(--off-soft);color:var(--ink);border:1px solid var(--border-strong)}
+  .save{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);font-size:.9rem;color:var(--muted)}
+  .save b{color:var(--accent-strong);font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.05rem}
+
+  /* table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:20px;background:var(--surface)}
+  table.rt{width:100%;border-collapse:collapse;font-size:.9rem;min-width:760px}
+  .rt th,.rt td{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:left;vertical-align:middle;line-height:1.6}
+  .rt th:last-child,.rt td:last-child{border-right:0}
+  .rt thead th{background:var(--surface-2);font-size:.82rem;color:var(--muted);font-weight:700;white-space:nowrap}
+  .rt tbody tr:last-child td{border-bottom:0}
+  .rt td.c{text-align:center}
+  .rt .no{font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--accent-strong)}
+  .rt .raid{font-family:"IBM Plex Mono",monospace;font-weight:500;white-space:nowrap}
+  .rt .t{font-family:"IBM Plex Mono",monospace;font-weight:500;white-space:nowrap}
+  .tag{display:inline-block;font-size:.78rem;font-weight:700;border-radius:6px;padding:1px 8px;white-space:nowrap}
+  .tag.on{background:var(--accent-soft);color:var(--accent-strong)}
+  .tag.off{background:var(--off-soft);color:#56616b}
+  .tag.cv{background:#e3eef9;color:#2f6fb0}
+  .tag.ex{background:var(--warn-soft);color:var(--warn)}
+  .rt tr.hl td{background:#f3faf9}
+  .tcap{margin:10px 2px 0;font-size:.82rem;color:var(--muted)}
+
+  /* expansion */
+  .exp{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;text-align:center}
+  .pool{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px}
+  .pool .sz{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.8rem;color:var(--ink);line-height:1.2}
+  .pool .d{font-size:.84rem;color:var(--muted)}
+  .exp .mid{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .exp .mid .t{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.25rem;color:var(--warn)}
+  .exp .mid .a{color:var(--warn);font-weight:800;font-size:1.4rem;line-height:1}
+  .exp .mid small{font-size:.78rem;color:var(--muted)}
+  @media (max-width:560px){ .exp{grid-template-columns:1fr} .exp .mid .a{transform:rotate(90deg)} }
+
+  figure.shot{margin:20px 0 0;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;
+    display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;box-shadow:var(--shadow)}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;width:30px;height:30px;border-radius:8px;
+    display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+  .step b{color:var(--ink)}
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 儲存管理 · RAID · #RAID快速修復</p>
+      <h1>Synology DSM「RAID 快速修復」與容量擴展時間測試</h1>
+      <p class="lead">Synology DSM 提供 <b>RAID 快速修復</b>功能。相較於一般修復，快速修復能縮短儲存集區從<b>降級狀態</b>復原到<b>良好狀態</b>所需的時間，並會<b>略過儲存集區中未使用的空間</b>以加快修復速度。本文以實機測試比較啟用與關閉快速修復的修復時間，並附上儲存集區容量擴展的時間計算。</p>
+      <div class="info">
+        <div class="ib"><div class="k">測試主機</div><div class="v">Synology DS1815+</div></div>
+        <div class="ib"><div class="k">主要測試</div><div class="v">RAID1／RAID5 啟用與關閉快速修復之修復時間</div></div>
+        <div class="ib"><div class="k">附加測試</div><div class="v">RAID5 儲存集區 4TB 擴展為 16TB</div></div>
+      </div>
+    </header>
+
+    <!-- setting -->
+    <section>
+      <h2><span class="n">01</span>啟用快速修復</h2>
+      <p class="sec-sub">於 <b>儲存空間管理員 → 全域設定 → 進階修復設定</b> 勾選 <b>啟動快速修復</b>。本次測試的 RAID Resync 速度限制設定為「<b>盡快完成 RAID Resync</b>」。</p>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/rebuild.jpg" alt="儲存空間管理員全域設定：RAID Resync 速度限制選擇盡快完成，進階修復設定勾選啟動快速修復"><figcaption>全域設定：RAID Resync 速度限制與「啟動快速修復」選項。</figcaption></figure>
+    </section>
+
+    <!-- results -->
+    <section>
+      <h2><span class="n">02</span>測試結果：快速修復時間比較</h2>
+      <p class="sec-sub">在相同硬碟組合與資料量（500GB）下，啟用快速修復可明顯縮短修復時間：</p>
+      <div class="bars">
+        <div class="bcard">
+          <h3>RAID1（2TB 儲存集區）</h3>
+          <p class="cond">1 顆 2TB＋1 顆 8TB，拔除 8TB 硬碟後再插入</p>
+          <div class="bar on"><span class="lab">開啟</span><div class="track"><div class="fill" style="width:57.1%">3h00m</div></div></div>
+          <div class="bar off"><span class="lab">關閉</span><div class="track"><div class="fill" style="width:71.4%">3h45m</div></div></div>
+          <div class="save">節省 45 分鐘，約縮短 <b>20%</b></div>
+        </div>
+        <div class="bcard">
+          <h3>RAID5（4TB 儲存集區）</h3>
+          <p class="cond">1 顆 2TB＋2 顆 8TB，降級後修復</p>
+          <div class="bar on"><span class="lab">開啟</span><div class="track"><div class="fill" style="width:41.3%">2h10m</div></div></div>
+          <div class="bar off"><span class="lab">關閉</span><div class="track"><div class="fill" style="width:100%">5h15m</div></div></div>
+          <div class="save">節省 3 小時 5 分鐘，約縮短 <b>59%</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- table -->
+    <section>
+      <h2><span class="n">03</span>完整測試紀錄</h2>
+      <div class="tablewrap">
+        <table class="rt">
+          <thead>
+            <tr><th>順序</th><th>硬碟顆數</th><th>RAID</th><th>操作動作</th><th>修復模式</th><th>花費時間</th><th>儲存集區</th><th>資料量</th></tr>
+          </thead>
+          <tbody>
+            <tr class="hl">
+              <td class="c no" rowspan="2">1</td><td>1 顆 2TB／1 顆 8TB</td><td class="raid">RAID1</td>
+              <td>拔掉 1 顆 8TB 硬碟<br>再插入 1 顆 8TB 硬碟</td><td><span class="tag on">開啟 Fast Repair</span></td><td class="t">3h00m</td><td class="raid">2TB</td>
+              <td class="c t" rowspan="6">500GB</td>
+            </tr>
+            <tr>
+              <td>1 顆 2TB／1 顆 8TB</td><td class="raid">RAID1</td>
+              <td>拔掉 1 顆 8TB 硬碟<br>再插入 1 顆 8TB 硬碟</td><td><span class="tag off">關閉 Fast Repair</span></td><td class="t">3h45m</td><td class="raid">2TB</td>
+            </tr>
+            <tr>
+              <td class="c no">2</td><td>1 顆 2TB／1 顆 8TB</td><td class="raid">RAID1</td>
+              <td>再插入 1 顆 8TB 硬碟</td><td><span class="tag cv">轉換為 RAID5</span></td><td class="t">11h30m</td><td class="raid">4TB</td>
+            </tr>
+            <tr class="hl">
+              <td class="c no">3</td><td>1 顆 2TB／2 顆 8TB</td><td class="raid">RAID5</td>
+              <td>拔掉 1 顆 8TB 硬碟</td><td><span class="tag on">開啟 Fast Repair</span></td><td class="t">2h10m</td><td class="raid">4TB</td>
+            </tr>
+            <tr>
+              <td class="c no">4</td><td>1 顆 2TB／2 顆 8TB</td><td class="raid">RAID5</td>
+              <td>拔掉 1 顆 2TB 硬碟<br>再插入 1 顆 8TB 硬碟</td><td><span class="tag off">關閉 Fast Repair</span></td><td class="t">5h15m</td><td class="raid">4TB</td>
+            </tr>
+            <tr>
+              <td class="c no">5</td><td>3 顆 8TB</td><td class="raid">RAID5</td>
+              <td>4TB 儲存集區擴展為 16TB</td><td><span class="tag ex">容量擴展</span></td><td class="t">27hr40m</td><td class="raid">16TB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tcap">※ 表格寬度超出畫面時，可左右滑動檢視。</p>
+    </section>
+
+    <!-- expansion -->
+    <section>
+      <h2><span class="n">04</span>附加測試：儲存集區容量擴展</h2>
+      <p class="sec-sub">將 RAID5 儲存集區中的 2TB 硬碟更換為 8TB 後，以 <b>3 顆 8TB</b> 硬碟將儲存集區由 4TB 擴展為 16TB：</p>
+      <div class="exp">
+        <div class="pool"><div class="sz">4TB</div><div class="d">1 顆 2TB＋2 顆 8TB</div></div>
+        <div class="mid"><span class="t">27 小時 40 分</span><span class="a" aria-hidden="true">→</span><small>容量擴展</small></div>
+        <div class="pool"><div class="sz">16TB</div><div class="d">3 顆 8TB</div></div>
+      </div>
+      <div class="callout">
+        <h3>規劃建議</h3>
+        <p>容量擴展所需時間遠長於修復，期間儲存集區仍可正常存取，但系統效能會受影響。建議安排於<b>非尖峰時段</b>執行，並事先完成重要資料的備份。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/DSM/StorageManager/storage_pool_repair?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心：修復儲存集區</a>
+      </div>
+      <p class="note"><b>※ DSM 7.0 之後提供此功能。</b><br>※ 以上為 DS1815+ 於特定硬碟組合與資料量下的實測結果，修復與擴展時間會因機種、硬碟型號、資料量及 RAID Resync 速度設定而異，僅供參考。</p>
+    </footer>
+  </main>
+</body>
+</html>

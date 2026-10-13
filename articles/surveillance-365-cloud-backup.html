@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surveillance 365 錄影雲端備份</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.58rem,4.4vw,2.4rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:10px;margin-top:24px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 15px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column}
+  .flow .node.hi{border-color:var(--accent);background:var(--accent-soft)}
+  .flow .node .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node.hi .ic{background:#fff}
+  .flow .node .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;align-self:center;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  .flow-cap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step .st{font-weight:800;color:var(--ink);font-size:1.02rem;margin:0 0 2px}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+  .step b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">雲端影像監控 · 錄影雲端備份 · #Surveillance365</p>
+      <h1>Surveillance Station 錄影檔雲端備份(Surveillance 365 ＋ C2)</h1>
+      <p class="lead">Synology <strong>Surveillance 365</strong> 搭配 <strong>C2 OneStorage</strong>,可將 <strong>Surveillance Station</strong> 的攝影機錄影檔<strong>備份到雲端</strong>——讓重要影像在本機之外<strong>多一份保存</strong>,需要時也能<strong>直接從雲端調閱</strong>。本篇示範如何從 Surveillance Station 啟用雲端備份,並在 Surveillance 365 檢視備份結果。</p>
+      <div class="tags">
+        <span>#Surveillance365</span><span>#C2OneStorage</span><span>#錄影雲端備份</span><span>#SurveillanceStation</span><span>#Synology監控</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/c9-hVdED6qg"
+        title="Surveillance Station 錄影檔雲端備份設定示範 － Surveillance 365"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Surveillance Station 錄影檔雲端備份設定示範(Surveillance 365)</b>　·　<a href="https://youtu.be/c9-hVdED6qg" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>從 <b>Surveillance Station 啟用錄影檔雲端備份</b>,並在 <b>Surveillance 365 檢視與播放</b>已備份到雲端的錄影。</div>
+
+    <!-- flow -->
+    <div class="flow" role="img" aria-label="錄影雲端備份流程:Surveillance Station 的錄影檔備份到 C2 OneStorage 雲端,再從 Surveillance 365 調閱播放。">
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <p class="ttl">Surveillance Station</p>
+        <p class="ds">攝影機錄影存在本機 NAS</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node hi">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/><path d="M12 21v-8M12 13l-2.4 2.4M12 13l2.4 2.4"/></svg></span>
+        <p class="ttl">C2 OneStorage 雲端</p>
+        <p class="ds">錄影檔備份到雲端儲存</p>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="node">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5l4 2-4 2z" fill="currentColor" stroke="none"/></svg></span>
+        <p class="ttl">Surveillance 365</p>
+        <p class="ds">從雲端檢視與播放錄影</p>
+      </div>
+    </div>
+    <p class="flow-cap">把 Surveillance Station 的錄影檔備份到 C2 雲端,在本機之外多一份;需要時從 Surveillance 365 調閱播放。</p>
+
+    <!-- 01 four steps -->
+    <section>
+      <h2><span class="n">01</span>設定四步驟</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <div><p class="st">連結 Surveillance 365</p>
+          <p>在 CMS 的「<b>雲端管理</b>」登入 Synology 帳戶並完成<b>雙重驗證</b>,選擇儲存錄影檔的<b>資料中心</b>;訂閱 <b>C2 OneStorage</b> 後,服務狀態會顯示為「<b>正常</b>」。</p></div></div>
+        <div class="step"><span class="num">2</span>
+          <div><p class="st">進入雲端平台</p>
+          <p>點選「<b>開啟 Surveillance 365</b>」,輸入 <b>C2 Encryption Key</b> 解密資料後即可進入;左下角可查看 <b>C2 OneStorage 的使用容量</b>。</p></div></div>
+        <div class="step"><span class="num">3</span>
+          <div><p class="st">設定攝影機雲端備份</p>
+          <p>在「<b>編輯攝影機</b> → <b>雲端備份</b>」分頁勾選啟用,並設定<b>雲端保留天數</b>、<b>串流配置</b>(高畫質／平衡／低頻寬),以及<b>備份規則排程</b>。</p></div></div>
+        <div class="step"><span class="num">4</span>
+          <div><p class="st">確認與播放</p>
+          <p>在 Surveillance 365 的「<b>攝影機管理</b>」可看到攝影機狀態為「<b>NAS 備份</b>」,以及<b>待備份時數</b>與<b>上傳速度</b>;在「<b>監控中心</b>」拖曳時間軸,即可播放已備份到雲端的錄影檔。</p></div></div>
+      </div>
+      <div class="callout">
+        <p>透過 Surveillance 365 雲端備份,重要的監控影像在<b>本機之外多一層保障</b>,也能<b>隨時從雲端調閱</b>。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/products/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;雲端備份需搭配 C2 OneStorage 訂閱,可用的保留天數、串流配置、備份排程與適用方案會因版本與方案而異,實際請以 Synology 官方說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

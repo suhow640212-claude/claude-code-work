@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人物自動追蹤 · Auto Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* tracking view visual */
+  .track{margin-top:24px;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;background:var(--surface)}
+  .view{position:relative;aspect-ratio:16/9;background:linear-gradient(160deg,#1c2c38,#2b3f4d);overflow:hidden}
+  .view::before{content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);
+    background-size:40px 40px}
+  .person{position:absolute;top:51%;left:50%;transform:translate(-50%,-50%);width:clamp(42px,11vw,60px);color:#e6edf2;z-index:2}
+  .person svg{width:100%;height:auto;fill:currentColor;stroke:none}
+  .reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:clamp(92px,25vw,142px);height:clamp(124px,33vw,188px);z-index:3}
+  .reticle .c{position:absolute;width:20px;height:20px;border:3px solid #37c9ba}
+  .reticle .c.tl{top:0;left:0;border-right:0;border-bottom:0}
+  .reticle .c.tr{top:0;right:0;border-left:0;border-bottom:0}
+  .reticle .c.bl{bottom:0;left:0;border-right:0;border-top:0}
+  .reticle .c.br{bottom:0;right:0;border-left:0;border-top:0}
+  .lock{position:absolute;top:14px;left:14px;z-index:4;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;font-weight:500;padding:3px 10px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .lock .d{width:7px;height:7px;border-radius:50%;background:#7effdf}
+  .zoom{position:absolute;top:14px;right:14px;z-index:4;background:rgba(255,255,255,.14);color:#eaf2f6;
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.28)}
+  .path{position:absolute;left:12%;right:12%;bottom:15%;border-top:2px dashed rgba(255,255,255,.42);z-index:2}
+  .path::after{content:"";position:absolute;right:-2px;top:-6px;width:0;height:0;
+    border:6px solid transparent;border-left:8px solid rgba(255,255,255,.55);border-right:0}
+  .track-cap{padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);
+    font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* flow */
+  .flow{display:flex;align-items:center;gap:10px;margin-top:20px}
+  .flow .node{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 14px;box-shadow:var(--shadow);text-align:center}
+  .flow .node .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 10px}
+  .flow .node .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .flow .node .ttl{font-weight:800;font-size:1rem;margin:0 0 4px}
+  .flow .node .ds{color:var(--muted);font-size:.85rem;margin:0;line-height:1.6}
+  .flow .arr{flex:none;color:var(--accent-strong);font-weight:800;font-size:1.3rem;line-height:1}
+  @media(max-width:560px){
+    .flow{flex-direction:column;align-items:stretch}
+    .flow .arr{transform:rotate(90deg);align-self:center}
+  }
+
+  /* two cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);
+    color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .ic svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.08rem;font-weight:700;line-height:1.4}
+  .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.76}
+  .card b{color:var(--ink)}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 影像監控 · AI 攝影機 · #人物自動追蹤</p>
+      <h1>人物自動追蹤:畫面自動鎖定,跟著人走</h1>
+      <p class="lead">Synology AI 網路攝影機搭配 Surveillance Station,提供<strong>人物自動追蹤</strong>:在<strong>即時畫面或錄影回放</strong>中開啟後,畫面會自動<strong>鎖定移動中的人物</strong>,持續<strong>置中、放大縮小</strong>跟拍,不必手動操作。</p>
+      <div class="tags">
+        <span>#Synology監控</span><span>#人物自動追蹤</span><span>#AI攝影機</span><span>#SurveillanceStation</span><span>#自動追蹤</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/f2ooLQsF-xU"
+        title="人物自動追蹤－Synology AI 網路攝影機"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>人物自動追蹤－Synology AI 網路攝影機</b>　·　<a href="https://youtu.be/f2ooLQsF-xU" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- tracking view visual -->
+    <div class="track" role="img" aria-label="人物自動追蹤示意:畫面以追蹤框鎖定移動中的人物,並自動置中放大。">
+      <div class="view">
+        <span class="lock"><span class="d"></span>鎖定追蹤</span>
+        <span class="zoom">AUTO ZOOM 1.0× → 2.4×</span>
+        <span class="path"></span>
+        <span class="person" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.4"/><path d="M12 10c-3.3 0-5.6 2.5-5.6 6.4V22h11.2v-5.6C17.6 12.5 15.3 10 12 10z"/></svg></span>
+        <span class="reticle"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></span>
+      </div>
+      <p class="track-cap">開啟後,畫面自動鎖定移動的人物,持續置中並放大縮小跟拍。</p>
+    </div>
+
+    <!-- 01 how it works -->
+    <section>
+      <h2><span class="n">01</span>怎麼運作</h2>
+      <div class="flow">
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+          <p class="ttl">開啟自動追蹤</p>
+          <p class="ds">在即時畫面或錄影回放中啟用</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2.3"/></svg></span>
+          <p class="ttl">鎖定移動人物</p>
+          <p class="ds">AI 認出並鎖住目標</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="node">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
+          <p class="ttl">置中＋放大縮小</p>
+          <p class="ds">畫面跟著人走、自動縮放</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 live + playback -->
+    <section>
+      <h2><span class="n">02</span>即時畫面、錄影回放都能用</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg></span>
+          <h3>即時畫面</h3>
+          <p>監看當下即時鎖定,畫面<b>跟著人移動、自動放大</b>,臨場就看得清楚。</p>
+        </article>
+        <article class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v6h6"/><path d="M3.5 13a9 9 0 1 0 2.6-7.4L3 9"/><path d="M12 8v4l3 2"/></svg></span>
+          <h3>錄影回放</h3>
+          <p>事後回放同樣能開啟追蹤,<b>重看事件時自動跟拍</b>目標,不必一直手動拉放。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 03 why -->
+    <section>
+      <h2><span class="n">03</span>為什麼好用</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>看得更清楚:</b>自動放大鎖定的人物,臉部與動作細節更明顯。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>免手動操作:</b>不用自己一直拖曳、縮放畫面去追人。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>適合大範圍空間:</b>大廳、賣場、廠區等廣角場景,也能緊盯移動目標。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/surveillance_station" target="_blank" rel="noopener noreferrer">Synology:Surveillance Station 功能介紹</a>
+        <a href="https://www.synology.com/zh-tw/surveillance/cameras" target="_blank" rel="noopener noreferrer">Synology:網路攝影機產品介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;是否支援人物自動追蹤、可用畫面(即時／回放)與操作方式會因攝影機型號、Surveillance Station 版本與授權而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSM 通知規則分層發送</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* routing diagram */
+  .route{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+  .route-head{display:grid;grid-template-columns:1.25fr 28px 1fr 28px 1fr;gap:8px;font-size:.78rem;font-weight:700;color:var(--muted);padding:0 2px 8px;border-bottom:1px dashed var(--border);margin-bottom:10px}
+  .rrow{display:grid;grid-template-columns:1.25fr 28px 1fr 28px 1fr;gap:8px;align-items:center;margin-top:10px}
+  .ev{display:flex;flex-wrap:wrap;gap:5px}
+  .ev span{font-size:.78rem;border-radius:6px;padding:2px 8px;line-height:1.5;background:var(--surface-2);border:1px solid var(--border)}
+  .ev span.c{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
+  .ev span.w{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+  .ev span.i{background:var(--lock-soft);border-color:transparent;color:var(--lock)}
+  .arr{color:var(--accent-strong);font-weight:800;text-align:center}
+  .rule{background:var(--accent-soft);color:var(--accent-strong);border-radius:9px;padding:8px 12px;font-weight:700;font-size:.92rem;line-height:1.4}
+  .rule small{display:block;font-weight:400;font-size:.76rem;color:var(--muted)}
+  .who{background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;padding:8px 12px;font-size:.84rem;line-height:1.45}
+  .who b{display:block;font-size:.9rem}
+  .who span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);word-break:break-all}
+  .rrow.hl .rule{background:var(--accent);color:#fff}
+  .rrow.hl .rule small{color:#dff3f1}
+  @media (max-width:640px){
+    .route-head{display:none}
+    .rrow{grid-template-columns:1fr;gap:6px;padding:12px;border:1px solid var(--border);border-radius:12px;margin-top:10px}
+    .arr{transform:rotate(90deg);line-height:1}
+  }
+
+  /* concept */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .card .ic{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center}
+  .card .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{margin:0;font-size:1.02rem;font-weight:700}
+  .card p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.7}
+  .card b{color:var(--ink)}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:640px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 系統管理 · 通知設定 · #通知規則</p>
+      <h1>Synology 系統通知訊息分類群組／分層發送 E-mail</h1>
+      <p class="lead">Synology DSM 提供全新的<b>「通知設定」</b>：可將想要發送的系統訊息勾選組合成<b>規則</b>，並指定由哪些人的 E-mail 接收。不同類型的通知可分別寄給負責的人員，避免所有訊息集中寄給同一人而遺漏重要事件。</p>
+    </header>
+
+    <!-- concept -->
+    <section>
+      <h2><span class="n">01</span>運作方式：規則 × 收件者</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span>
+          <h3>規則：決定「發送哪些通知」</h3>
+          <p>從系統事件清單中勾選需要的項目，組合成一條規則，例如「<b>備份工作通知</b>」。每個事件皆標示層級：資訊、警告、重大。</p>
+        </div>
+        <div class="card">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+          <h3>收件者設定檔：決定「發給誰」</h3>
+          <p>為規則指定收件人 E-mail，一個設定檔可包含多個電子郵件。可建立<b>多個收件者設定檔</b>，讓不同事件寄給不同人員。</p>
+        </div>
+      </div>
+
+      <div class="route" role="img" aria-label="通知分層發送示意：備份相關事件透過備份工作通知規則寄給 MIS；重大事件寄給 IT 主管；其他事件寄給系統管理員">
+        <div class="route-head"><span>系統事件</span><span></span><span>規則</span><span></span><span>收件者</span></div>
+        <div class="rrow hl">
+          <div class="ev"><span class="c">資料備份任務失敗</span><span class="c">本地 LUN 備份任務失敗</span><span class="w">備份統計數據警告</span></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="rule">備份工作通知<small>本文範例</small></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="who"><b>MIS 備份負責人</b><span>mis1@hongku.com.tw</span></div>
+        </div>
+        <div class="rrow">
+          <div class="ev"><span class="c">所有「重大」層級事件</span></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="rule">Critical<small>內建規則</small></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="who"><b>IT 主管</b><span>示意</span></div>
+        </div>
+        <div class="rrow">
+          <div class="ev"><span class="i">一般系統通知</span><span class="w">警告事件</span></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="rule">default／Warning<small>內建規則</small></div>
+          <span class="arr" aria-hidden="true">→</span>
+          <div class="who"><b>系統管理員</b><span>示意</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- steps -->
+    <section>
+      <h2><span class="n">02</span>設定步驟：建立「備份工作通知」</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>開啟通知規則<span class="path">控制台 › 通知設定 › 規則</span></h3>
+          <p>可為不同的系統事件建立不同的通知規則，每個規則皆可套用至多種寄送管道，例如電子郵件或 Webhook。系統預設已有 <b>All</b>、<b>Warning</b>、<b>Critical</b>、<b>default</b> 等規則，按 <b>新增</b> 建立自訂規則。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/notif1.jpg" alt="控制台通知設定規則分頁，列出 All、Warning、Critical、default 規則及其電子郵件設定"><figcaption>控制台 › 通知設定 › 規則。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>勾選要通知的事件</h3>
+          <p>輸入 <b>規則名稱</b>（範例「備份工作通知」），於 Hyper Backup 分類下勾選需要的事件，例如：</p>
+          <ul>
+            <li>重大：本地 LUN 備份任務失敗、本地 LUN 還原任務失敗、資料備份任務失敗</li>
+            <li>警告：備份統計數據警告</li>
+          </ul>
+          <p>可只勾選失敗與警告類事件，略過「備份完成」等一般資訊，讓收件人只收到需要處理的通知。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/notif2.jpg" alt="編輯規則：規則名稱備份工作通知，Hyper Backup 分類下勾選重大與警告層級的備份事件"><figcaption>建立「備份工作通知」規則，勾選備份相關事件。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>指定此規則的收件人<span class="path">控制台 › 通知設定 › 電子郵件 › 收件者設定檔 › 新增</span></h3>
+          <p>於 <b>新增收件者設定檔</b> 選擇 <b>規則</b>「備份工作通知」，並輸入收件人 <b>電子郵件</b>（範例 mis1@hongku.com.tw），按 <b>新增</b> 完成。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/notif3.jpg" alt="電子郵件分頁新增收件者設定檔，規則選擇備份工作通知，電子郵件 mis1@hongku.com.tw"><figcaption>新增收件者設定檔：規則「備份工作通知」→ mis1@hongku.com.tw。</figcaption></figure>
+        </div></div>
+
+      </div>
+      <div class="callout">
+        <h3>建議</h3>
+        <p>設定完成後，可於電子郵件分頁使用 <b>寄送測試電子郵件</b> 確認收件人能正常收信。依職責建立多組規則（例如備份、儲存空間、安全性），即可將通知<b>分層發送</b>給對應的負責人員。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/help/DSM/AdminCenter/system_notification_filter?version=7" target="_blank" rel="noopener noreferrer">Synology 知識中心：通知規則</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；可選的通知事件會因已安裝的套件與 DSM 版本而異，實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

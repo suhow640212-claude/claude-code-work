@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active Insight 篡改偵測</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.6rem,4.5vw,2.42rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* activity monitor */
+  .monitor{margin-top:24px;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--surface);padding:18px 18px 16px}
+  .mhead{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .mhead .mt{font-weight:700;font-size:.95rem}
+  .mhead .badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--danger);color:#fff;
+    font-weight:700;font-size:.76rem;padding:4px 11px;border-radius:999px;box-shadow:0 3px 10px rgba(192,73,61,.28)}
+  .mhead .badge svg{width:14px;height:14px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .bars{position:relative;display:flex;align-items:flex-end;gap:clamp(4px,1.6vw,9px);height:clamp(130px,32vw,170px)}
+  .bars .b{flex:1;background:var(--accent);border-radius:4px 4px 2px 2px;opacity:.72;min-width:0}
+  .bars .b.bad{background:var(--danger);opacity:1}
+  .bars .thr{position:absolute;left:0;right:0;border-top:2px dashed var(--border-strong);z-index:3}
+  .bars .thr .tg{position:absolute;right:0;top:0;transform:translateY(-50%);background:var(--surface);
+    font-family:"IBM Plex Mono",monospace;font-size:.64rem;color:var(--muted);padding:0 6px;white-space:nowrap}
+  .axis{display:flex;justify-content:space-between;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--muted)}
+  .mon-cap{margin:13px 2px 0;font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 資安防護 · #勒索病毒防禦</p>
+      <h1>Synology Active Insight:即時篡改偵測,防範勒索加密病毒</h1>
+      <p class="lead">Synology <strong>Active Insight</strong> 整合<strong>主動式異常識別</strong>機制,提供<strong>即時篡改偵測</strong>:持續監控檔案存取動態,偵測並追蹤<strong>異常修改</strong>——當出現勒索加密病毒常見的大量異常變更時,能及早示警,讓您全盤掌握檔案的存取與變更。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#ActiveInsight</span><span>#勒索病毒防禦</span><span>#篡改偵測</span><span>#資安</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/P_DyBUN6PsE"
+        title="Synology Active Insight 勒索加密病毒防禦 檔案即時篡改偵測"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>Active Insight － 勒索加密病毒防禦．檔案即時篡改偵測</b>　·　<a href="https://youtu.be/P_DyBUN6PsE" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- activity monitor -->
+    <div class="monitor" role="img" aria-label="檔案變更活動監測:平時維持在正常範圍,出現勒索病毒式的大量異常修改時暴增並觸發警示。">
+      <div class="mhead">
+        <span class="mt">檔案變更活動（每分鐘）</span>
+        <span class="badge"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>偵測到異常篡改</span>
+      </div>
+      <div class="bars">
+        <span class="b" style="height:16%"></span>
+        <span class="b" style="height:22%"></span>
+        <span class="b" style="height:14%"></span>
+        <span class="b" style="height:20%"></span>
+        <span class="b" style="height:18%"></span>
+        <span class="b" style="height:24%"></span>
+        <span class="b" style="height:19%"></span>
+        <span class="b bad" style="height:86%"></span>
+        <span class="b bad" style="height:98%"></span>
+        <span class="b bad" style="height:91%"></span>
+        <span class="b" style="height:27%"></span>
+        <span class="b" style="height:17%"></span>
+        <span class="thr" style="bottom:40%"><span class="tg">正常範圍</span></span>
+      </div>
+      <div class="axis"><span>時間 →</span><span>異常暴增</span></div>
+      <p class="mon-cap">Active Insight 持續監控檔案變更;當出現勒索病毒式的大量異常修改時,立即偵測並示警。</p>
+    </div>
+
+    <!-- 01 how it defends -->
+    <section>
+      <h2><span class="n">01</span>它怎麼偵測勒索病毒</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span>
+          <p><b>主動式異常識別:</b>建立正常的檔案存取樣態,持續比對、找出<b>偏離常態</b>的行為。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>即時篡改偵測:</b>勒索病毒會在短時間內<b>大量加密/修改檔案</b>;這種異常一出現就被即時偵測。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>偵測並追蹤:</b>記錄異常變更的<b>來源、時間與受影響檔案</b>,方便追查與即時應變。</p></div>
+        <div class="note-item"><span class="mk"></span>
+          <p><b>全盤掌握:</b>集中檢視檔案的存取與變更動態,再透過通知讓你第一時間知道。</p></div>
+      </div>
+    </section>
+
+    <!-- 02 key point -->
+    <section>
+      <h2><span class="n">02</span>偵測之外,搭配備份更完整</h2>
+      <div class="callout">
+        <p><b>偵測是第一步,能「復原」才算完整防禦。</b>建議搭配 <b>快照(Snapshot Replication)</b> 與 <b>Hyper Backup</b>:萬一檔案遭加密,也能快速還原到乾淨的版本,把損失降到最低。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/DSM70/ActiveInsight" target="_blank" rel="noopener noreferrer">Synology:DSM 7.0 Active Insight</a>
+        <a href="https://www.synology.com/zh-tw/dsm/feature/active-insight/overview" target="_blank" rel="noopener noreferrer">Synology:Active Insight 介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;異常檔案活動/篡改偵測屬 Active Insight 的進階(Premium)功能,實際可用項目、偵測方式與方案會因 DSM 版本、授權與設定而異,請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

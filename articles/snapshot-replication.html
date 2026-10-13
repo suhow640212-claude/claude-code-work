@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snapshot Replication 複寫保護</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+
+  /* replication diagram */
+  .repl{display:flex;align-items:stretch;gap:14px;margin-top:24px}
+  .repl .srv{flex:1;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:20px 14px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .repl .srv .ic{width:48px;height:48px;border-radius:12px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;margin-bottom:2px}
+  .repl .srv .ic svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .repl .srv .role{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.06em;color:var(--accent-strong);text-transform:uppercase}
+  .repl .srv .nm{font-weight:800;font-size:1rem}
+  .repl .srv .mod{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted)}
+  .repl .srv .off{position:absolute;top:10px;right:10px;font-family:"IBM Plex Mono",monospace;font-size:.62rem;
+    background:var(--warn-soft);color:var(--warn);padding:2px 8px;border-radius:999px;font-weight:700}
+  .repl .link{flex:0 0 auto;align-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--accent-strong);min-width:74px}
+  .repl .link .ar{font-size:1.4rem;font-weight:800;line-height:1}
+  .repl .link .lb{font-family:"IBM Plex Mono",monospace;font-size:.74rem;font-weight:700}
+  .repl .link .lb2{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--muted)}
+  .repl-cap{margin:13px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .repl{flex-direction:column}
+    .repl .link{flex-direction:row;gap:8px}
+    .repl .link .ar{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* callout */
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout ul{margin:0;padding-left:1.15em;color:var(--muted);font-size:.95rem}
+  .callout li{margin:0 0 6px}
+  .callout li:last-child{margin-bottom:0}
+  .callout b{color:var(--ink)}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step .st{font-weight:800;color:var(--ink);font-size:1.02rem;margin:0 0 2px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .step .st .en{font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:500;color:var(--accent-strong);
+    background:var(--accent-soft);padding:1px 8px;border-radius:999px}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology NAS · 資料保護 · #SnapshotReplication</p>
+      <h1>三分鐘搞懂 － Synology 複寫保護機制</h1>
+      <p class="lead">Synology <strong>Snapshot Replication</strong> 以高效率、親民的成本提供絕佳的資料保護:只要有<strong>兩台</strong>支援此功能的 Synology NAS,即可對資料夾進行<strong>最短每 5 分鐘</strong>的異地資料保護。若您打算為資料做異地備份,卻還不熟悉它的運作方式,這篇與影片帶您快速了解。</p>
+      <div class="tags">
+        <span>#SynologyNAS</span><span>#SnapshotReplication</span><span>#複寫保護</span><span>#異地備份</span><span>#故障轉移</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/NODtgPof1JM"
+        title="三分鐘搞懂 Synology 複寫保護機制 Snapshot Replication"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>三分鐘搞懂 Synology 複寫保護機制(Snapshot Replication)</b>　·　<a href="https://youtu.be/NODtgPof1JM" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+
+    <!-- replication diagram -->
+    <div class="repl" role="img" aria-label="複寫架構:來源伺服器 DS1618+ 將資料夾複寫到異地的目標伺服器 DS218+,最短每 5 分鐘一次。">
+      <div class="srv">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="role">來源伺服器</span>
+        <span class="nm">主伺服器</span>
+        <span class="mod">DS1618+</span>
+      </div>
+      <div class="link" aria-hidden="true">
+        <span class="ar">→</span>
+        <span class="lb">複寫</span>
+        <span class="lb2">最短每 5 分鐘</span>
+      </div>
+      <div class="srv">
+        <span class="off">異地</span>
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="role">目標伺服器</span>
+        <span class="nm">副伺服器</span>
+        <span class="mod">DS218+</span>
+      </div>
+    </div>
+    <p class="repl-cap">來源伺服器的資料夾,定期複寫到另一台異地的目標伺服器。</p>
+
+    <!-- 01 concept -->
+    <section>
+      <h2><span class="n">01</span>Snapshot Replication 是什麼</h2>
+      <div class="callout">
+        <h3>以快照為基礎的異地複寫</h3>
+        <ul>
+          <li>把來源 NAS 的<b>共用資料夾</b>(以快照為基礎)定期<b>複寫</b>到另一台目標 NAS。</li>
+          <li>複寫頻率<b>最短每 5 分鐘</b>一次,達成接近即時的異地資料保護。</li>
+          <li>只需<b>兩台</b>支援此功能的 Synology NAS,高效率且成本親民。</li>
+          <li>當來源發生意外時,目標端保有的副本可讓資料<b>快速恢復或接手</b>。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 the four demos -->
+    <section>
+      <h2><span class="n">02</span>影片的四個演示</h2>
+      <p class="sec-sub">影片以 DS1618+(來源)與 DS218+(目標)示範以下流程:</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <div><p class="st">建立複寫任務</p>
+          <p>在來源伺服器選定資料夾,設定複寫到目標伺服器,並排定複寫排程(最短每 5 分鐘)。</p></div></div>
+        <div class="step"><span class="num">2</span>
+          <div><p class="st">交換轉移 <span class="en">Switchover</span></p>
+          <p><b>計劃性</b>地將「來源」與「目標」的角色互換——例如來源需要維護時,讓目標端接手成為主要伺服器。</p></div></div>
+        <div class="step"><span class="num">3</span>
+          <div><p class="st">模擬故障轉移 <span class="en">Failover</span></p>
+          <p>模擬來源伺服器<b>意外故障</b>的情境,改由目標伺服器接手提供服務,確保資料持續可用。</p></div></div>
+        <div class="step"><span class="num">4</span>
+          <div><p class="st">重新保護 <span class="en">Re-protect</span></p>
+          <p>轉移後<b>重新建立複寫關係</b>(方向可能反轉),讓資料再次受到複寫保護,回到有備援的狀態。</p></div></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/snapshot_replication" target="_blank" rel="noopener noreferrer">Synology:Snapshot Replication 功能介紹</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;支援 Snapshot Replication 的機型、可設定的複寫頻率、交換轉移／故障轉移／重新保護的實際操作會因型號、DSM 版本與環境而異,實際請以 Synology 官方文件與你的環境為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

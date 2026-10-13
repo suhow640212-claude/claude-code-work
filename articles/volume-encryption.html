@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synology 儲存空間加密</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* scope */
+  .vol{margin-top:20px;background:var(--surface);border:2px solid var(--lock);border-radius:16px;padding:16px 18px 18px;box-shadow:var(--shadow)}
+  .vol-h{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--lock);margin-bottom:12px}
+  .vol-h svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .vol-h small{font-weight:500;color:var(--muted);font-size:.84rem}
+  .inside{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .item{background:var(--lock-soft);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center}
+  .item svg{width:22px;height:22px;stroke:var(--lock);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .item b{display:block;font-size:.95rem}
+  .item span{font-size:.8rem;color:var(--muted)}
+
+  /* theft scenario */
+  .vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .lane{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .lane h3{margin:0 0 10px;font-size:1.02rem;font-weight:700;display:flex;align-items:center;gap:8px}
+  .pill{font-size:.74rem;font-weight:700;border-radius:6px;padding:1px 8px}
+  .pill.bad{background:var(--danger-soft);color:var(--danger)}
+  .pill.good{background:var(--accent-soft);color:var(--accent-strong)}
+  .lane p{margin:0;color:var(--muted);font-size:.93rem}
+  .data{margin-top:12px;font-family:"IBM Plex Mono",monospace;font-size:.82rem;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:9px;padding:10px 12px;line-height:1.6;word-break:break-all}
+  .data.plain{color:var(--danger)}
+  .data.cipher{color:var(--muted)}
+
+  /* keys */
+  .keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:20px}
+  .key{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .key.rec{border-top-color:var(--warn)}
+  .key h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;display:flex;align-items:center;gap:8px}
+  .key h3 svg{width:20px;height:20px;stroke:var(--accent-strong);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .key.rec h3 svg{stroke:var(--warn)}
+  .key p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.75}
+  .key b{color:var(--ink)}
+  .key ul{margin:8px 0 0;padding-left:1.15em;color:var(--muted);font-size:.9rem}
+  .key li{margin:0 0 4px}
+
+  /* steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--ink)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:640px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;
+    padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  /* notes */
+  .notes{display:grid;gap:12px;margin-top:20px}
+  .note-item{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .note-item .mk{width:9px;height:9px;border-radius:2px;background:var(--accent);margin-top:9px;flex:none}
+  .note-item p{margin:0;font-size:.96rem;color:var(--muted)}
+  .note-item b{color:var(--ink)}
+  .note-item a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">NAS 資料保護 · 儲存空間加密 · #Encryption</p>
+      <h1>Synology 加密整個儲存空間－避免整台主機或硬碟遭竊資料外洩</h1>
+      <p class="lead"><b>儲存空間加密</b>能保護整個儲存空間，包含<b>共用資料夾、LUN 與套件資料</b>。即使整台主機或硬碟遭竊，他人也無法讀取其中的資料，同時兼顧速度、安全性與便利性。</p>
+    </header>
+
+    <!-- scope -->
+    <section>
+      <h2><span class="n">01</span>加密範圍</h2>
+      <p class="sec-sub">建立儲存空間時啟用加密，儲存空間內的所有內容皆<b>統一加密</b>，無須逐一設定：</p>
+      <div class="vol">
+        <div class="vol-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>加密的儲存空間<small>整個儲存空間受保護</small></div>
+        <div class="inside">
+          <div class="item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><div><b>共用資料夾</b><span>所有檔案資料</span></div></div>
+          <div class="item"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/></svg><div><b>iSCSI LUN</b><span>區塊儲存資料</span></div></div>
+          <div class="item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg><div><b>套件資料</b><span>安裝於此空間的套件</span></div></div>
+        </div>
+      </div>
+
+      <div class="vs">
+        <div class="lane">
+          <h3><span class="pill bad">未加密</span>硬碟遭竊</h3>
+          <p>將硬碟接到其他電腦即可直接讀取，資料完全外洩。</p>
+          <div class="data plain">報價單.xlsx　客戶名單.csv　合約.pdf</div>
+        </div>
+        <div class="lane">
+          <h3><span class="pill good">已加密</span>硬碟遭竊</h3>
+          <p>沒有加密金鑰便無法解鎖，取得的只是無法辨識的加密資料。</p>
+          <div class="data cipher">8f3a…c91e　d0b7…4a2f　e5c1…77b0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- keys -->
+    <section>
+      <h2><span class="n">02</span>兩種金鑰的用途</h2>
+      <div class="keys">
+        <div class="key">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg>加密金鑰</h3>
+          <p>由系統產生，存放在<b>加密金鑰保存庫</b>中。保存庫狀態良好時，系統開機會<b>自動解鎖</b>加密的儲存空間。</p>
+          <ul><li>保存庫預設位於本機</li><li>可改存放於遠端金鑰伺服器（KMIP）集中管理</li></ul>
+        </div>
+        <div class="key rec">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>復原金鑰</h3>
+          <p>建立加密儲存空間時<b>自動下載至電腦</b>的金鑰檔案。無法存取加密金鑰保存庫時，需使用復原金鑰<b>手動解鎖</b>儲存空間。</p>
+          <ul><li>請存放於 NAS 以外的安全位置</li><li>與保存庫同時遺失將無法存取資料</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- steps -->
+    <section>
+      <h2><span class="n">03</span>設定步驟</h2>
+      <div class="steps">
+
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>建立儲存空間時勾選加密<span class="path">儲存空間管理員 › 建立 › 設定加密</span></h3>
+          <p>於儲存管理新增精靈的 <b>設定加密</b> 步驟勾選 <b>加密此儲存空間</b>。儲存空間內的套件、資料、iSCSI LUN 都會統一被加密。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/encrypt1.jpg" alt="儲存管理新增精靈設定加密頁，勾選加密此儲存空間"><figcaption>勾選「加密此儲存空間」。</figcaption></figure>
+          <div class="warn"><b>注意：</b>加密儲存空間可能會影響其效能。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>設定金鑰保存庫密碼</h3>
+          <p>首次使用時須 <b>啟用加密金鑰保存庫</b>，設定 <b>保存庫密碼</b> 並確認。日後建立或轉移加密的儲存空間時，皆會使用此密碼。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/encrypt2.jpg" alt="啟用加密金鑰保存庫，輸入保存庫密碼與確認密碼"><figcaption>設定保存庫密碼 → 啟用。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>妥善保存復原金鑰</h3>
+          <p>系統會自動將 <b>復原金鑰</b> 檔案下載到您的電腦，請妥善保存，並勾選「是，我已收到復原金鑰並會妥善保管」後按 <b>確定</b>。</p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/encrypt3.jpg" alt="注意事項：無法存取加密金鑰保存庫時需使用復原金鑰手動解鎖，請將復原金鑰儲存在安全的地方"><figcaption>確認已收到復原金鑰並妥善保管。</figcaption></figure>
+          <div class="warn"><b>重要：</b>若同時遺失復原金鑰與加密金鑰保存庫，將無法再存取此儲存空間。</div>
+        </div></div>
+
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>確認金鑰保存庫位置<span class="path">儲存空間管理員 › 全域設定 › 加密金鑰保存庫</span></h3>
+          <p>加密金鑰保存庫的 <b>保存庫位置</b> 預設為 <b>本機</b>；經過設定，金鑰也可以放置在遠端金鑰伺服器。若重置保存庫，所有加密儲存空間的加密金鑰也會一併重置。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/encrypt4.jpg" alt="儲存空間管理員全域設定，加密金鑰保存庫已啟用，保存庫位置本機"><figcaption>全域設定：加密金鑰保存庫，保存庫位置為本機。</figcaption></figure>
+        </div></div>
+
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>設定遠端金鑰伺服器（KMIP）<span class="path">控制台 › 安全性 › KMIP</span></h3>
+          <p>勾選 <b>設為遠端金鑰用戶端</b>，輸入遠端金鑰伺服器的 <b>主機名稱</b>、<b>連接埠</b>（範例 5696）與 <b>憑證授權單位</b>，即可將加密金鑰集中存放於另一台 Synology NAS 管理。另一台 NAS 則於同頁勾選 <b>設為遠端金鑰伺服器</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/encrypt5.jpg" alt="控制台安全性 KMIP 分頁，設為遠端金鑰用戶端，主機名稱 192.168.1.215 連接埠 5696"><figcaption>控制台 › 安全性 › KMIP：設定遠端金鑰伺服器位置與憑證。</figcaption></figure>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- notes -->
+    <section>
+      <h2><span class="n">04</span>使用前須知</h2>
+      <div class="notes">
+        <div class="note-item"><span class="mk"></span><p><b>機種限制：</b>並非所有機種皆支援儲存空間加密，請先參閱 <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Which_models_support_encrypted_volumes" target="_blank" rel="noopener noreferrer">支援加密儲存空間的機種清單</a>。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>效能影響：</b>加密與解密需要運算資源，對效能有一定影響，建議依機種與工作負載評估。</p></div>
+        <div class="note-item"><span class="mk"></span><p><b>金鑰集中管理：</b>將金鑰存放於遠端金鑰伺服器，即使整台主機遭竊，失竊的主機也無法自動解鎖儲存空間。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/PAS/help/PAS/StorageManager/volume_create_volume_encrypted?version=1_0" target="_blank" rel="noopener noreferrer">Synology 知識中心：建立加密的儲存空間</a>
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Which_models_support_encrypted_volumes" target="_blank" rel="noopener noreferrer">Synology 知識中心：哪些機種支援加密的儲存空間？</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；功能選項與畫面會因 NAS 機種與 DSM 版本而異，實際請以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

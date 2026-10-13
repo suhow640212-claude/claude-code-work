@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail Server 安全機制：SPF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --vio:#5b4a9a; --vio-soft:#ece8f6;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  .goal{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);
+    border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);font-size:1rem}
+  .goal b{color:var(--accent-strong)}
+
+  figure.shot{margin:18px 0 2px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  figure.shot img{display:block;width:100%;border-radius:8px;border:1px solid var(--border)}
+  figure.shot.narrow img{max-width:700px;margin:0 auto}
+  figure.shot figcaption{margin-top:9px;font-size:.84rem;color:var(--muted);text-align:center;line-height:1.6}
+
+  /* outcomes */
+  .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+  .oc{background:var(--surface);border:1px solid var(--border);border-top:4px solid;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .oc .r{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.95rem}
+  .oc h3{margin:2px 0 4px;font-size:1rem;font-weight:700}
+  .oc p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.65}
+  .oc.pass{border-top-color:var(--accent)} .oc.pass .r{color:var(--accent-strong)}
+  .oc.soft{border-top-color:var(--warn)} .oc.soft .r{color:var(--warn)}
+  .oc.hard{border-top-color:var(--danger)} .oc.hard .r{color:var(--danger)}
+
+  /* syntax */
+  .syntax{margin-top:20px;background:#17232e;color:#e7eef4;border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);
+    font-family:"IBM Plex Mono",monospace;font-size:clamp(.82rem,2.4vw,.95rem);line-height:2;overflow-x:auto}
+  .syntax .lab{display:block;font-family:"Noto Sans TC",sans-serif;font-size:.76rem;color:#9aabb8;margin-bottom:4px;letter-spacing:.06em}
+  .tok{border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .k-v{background:#2a4a6b;color:#bfe0ff}
+  .k-a{background:#1e4c47;color:#a9efe5}
+  .k-d{background:#4a3d1a;color:#ffe2a6}
+  .k-i{background:#3b335c;color:#d9cfff}
+  .k-e{background:#5a2a26;color:#ffc4bc}
+
+  /* param table */
+  .params{display:grid;gap:0;margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .pm{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:13px 18px;border-bottom:1px solid var(--border);align-items:start}
+  .pm:last-child{border-bottom:0}
+  .pm .t{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;border-radius:6px;padding:1px 9px;justify-self:start}
+  .pm p{margin:0;color:var(--muted);font-size:.93rem}
+  .pm b{color:var(--ink)}
+  .t.v{background:var(--lock-soft);color:var(--lock)}
+  .t.a{background:var(--accent-soft);color:var(--accent-strong)}
+  .t.d{background:var(--warn-soft);color:var(--warn)}
+  .t.i{background:var(--vio-soft);color:var(--vio)}
+  .t.e{background:var(--danger-soft);color:var(--danger)}
+  @media (max-width:560px){ .pm{grid-template-columns:1fr;gap:6px} }
+
+  /* all compare */
+  .vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .lane{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .lane h3{margin:0 0 6px;font-size:1.02rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lane h3 code{font-family:"IBM Plex Mono",monospace;font-size:1rem;border-radius:6px;padding:0 9px}
+  .lane.hard h3 code{background:var(--danger-soft);color:var(--danger)}
+  .lane.soft h3 code{background:var(--warn-soft);color:var(--warn)}
+  .lane p{margin:0 0 8px;color:var(--muted);font-size:.92rem}
+  .lane .fit{margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--border);font-size:.88rem;color:var(--muted)}
+  .lane b{color:var(--ink)}
+
+  /* example decode */
+  .ex{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px}
+  .ex .rec{font-family:"IBM Plex Mono",monospace;font-size:clamp(.8rem,2.3vw,.92rem);background:var(--surface-2);border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+  .ex .rec .q{color:var(--muted)}
+  .ex .rec .tok{padding:2px 8px}
+  .rec .k-v{background:var(--lock-soft);color:var(--lock)}
+  .rec .k-a{background:var(--accent-soft);color:var(--accent-strong)}
+  .rec .k-d{background:var(--warn-soft);color:var(--warn)}
+  .rec .k-i{background:var(--vio-soft);color:var(--vio)}
+  .rec .k-e{background:var(--danger-soft);color:var(--danger)}
+  .ex ol{margin:14px 0 0;padding-left:1.3em;color:var(--muted);font-size:.92rem}
+  .ex li{margin:0 0 6px}
+  .ex li code{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:500}
+
+  /* step */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--ink)}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--accent-strong)}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .callout{margin-top:20px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 8px;font-size:1.02rem;font-weight:700;color:var(--accent-strong)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+  .callout .ref{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.9rem}
+  .callout a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  .callout a:hover{border-bottom-color:var(--accent-strong)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .seealso{margin:14px 0 0;font-size:.9rem;color:var(--ink)}
+  .seealso + .seealso{margin-top:4px}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Mail Server 安全機制 · #SPF</p>
+      <h1>Mail Server 安全機制－SPF 寄件者來源管理規則</h1>
+      <p class="lead"><b>SPF（Sender Policy Framework）</b>讓收件端郵件伺服器依據郵件中的寄件者網域，主動向寄件端所屬的 DNS 伺服器核對其 <b>SPF 記錄</b>，再依比對結果決定接收、歸入垃圾郵件或拒絕接收。</p>
+      <div class="tags"><span>#MailPlus</span><span>#SPF</span></div>
+    </header>
+
+    <!-- how -->
+    <section>
+      <h2><span class="n">01</span>SPF 的運作方式</h2>
+      <div class="goal">SPF 的主要目的：<b>避免他人冒用您的網域名稱寄信。</b></div>
+      <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/spf-1.jpg" alt="SPF 運作流程：寄件伺服器將郵件傳送出去，收件伺服器向 DNS Server 查詢寄件者網域的 SPF 記錄，依結果 pass 傳送到收件匣、soft fail 傳送至垃圾郵件匣、hard fail 拒絕傳送"><figcaption>SPF 運作流程：收件伺服器向 DNS Server 核對寄件者網域的 SPF 記錄。</figcaption></figure>
+      <p class="sec-sub" style="margin-top:16px">收件端郵件伺服器依比對結果處理郵件：</p>
+      <div class="out">
+        <div class="oc pass"><span class="r">pass</span><h3>傳送到使用者收件匣</h3><p>寄件 IP 屬於該網域在 SPF 記錄中宣告的來源。</p></div>
+        <div class="oc soft"><span class="r">soft fail</span><h3>傳送至垃圾郵件匣</h3><p>寄件 IP 不在 SPF 記錄中，但網域設定為 <code>~all</code>。</p></div>
+        <div class="oc hard"><span class="r">hard fail</span><h3>拒絕傳送</h3><p>寄件 IP 不在 SPF 記錄中，且網域設定為 <code>-all</code>。</p></div>
+      </div>
+    </section>
+
+    <!-- syntax -->
+    <section>
+      <h2><span class="n">02</span>SPF 記錄語法</h2>
+      <p class="sec-sub">設定 SPF 的方式，是在網域名稱的 DNS Server 中加入一筆 <b>TXT 記錄</b>，語法如下：</p>
+      <div class="syntax">
+        <span class="lab">語法</span>
+        <span class="tok k-v">v=spf1</span> <span class="tok k-a">[a]</span> <span class="tok k-a">[mx]</span> <span class="tok k-d">[a:&lt;domain&gt;]</span> <span class="tok k-d">[mx:&lt;domain&gt;]</span> <span class="tok k-i">[ip4|ip6:&lt;IP address&gt;]</span> <span class="tok k-e">&lt;enforcement rule&gt;</span>
+      </div>
+      <div class="params">
+        <div class="pm"><span class="t v">v=spf1</span><p><b>必要的宣告</b>，表示此記錄為 SPF version 1。</p></div>
+        <div class="pm"><span class="t a">a</span><p>比對 DNS 中的 <b>A 記錄</b>；若未指定網域名稱，則以目前的網域為主。</p></div>
+        <div class="pm"><span class="t a">mx</span><p>比對 DNS 中的 <b>MX 記錄</b>；若未指定網域名稱，則以目前的網域為主。</p></div>
+        <div class="pm"><span class="t d">a: / mx:<br>domain name</span><p>通常為含有 FQDN 完整名稱的 Mail Server 寄件伺服器名稱，尤其是<b>代為寄信機構</b>的寄信伺服器 FQDN。</p></div>
+        <div class="pm"><span class="t i">ip4: / ip6:</span><p>直接指定允許寄信的 IP 位址；<b>ip4</b> 為 IPv4 格式，<b>ip6</b> 為 IPv6 格式。</p></div>
+        <div class="pm"><span class="t e">-all / ~all</span><p>強制規則：決定不在 SPF 記錄中的寄信 IP 應如何處理，詳見下節。</p></div>
+      </div>
+    </section>
+
+    <!-- all -->
+    <section>
+      <h2><span class="n">03</span>強制規則：<code style="font-family:'IBM Plex Mono',monospace">-all</code> 與 <code style="font-family:'IBM Plex Mono',monospace">~all</code></h2>
+      <div class="vs">
+        <div class="lane hard">
+          <h3><code>-all</code>Hard Fail</h3>
+          <p>不在 SPF 記錄中的寄信 IP，<b>一律視為偽造 IP</b>。</p>
+          <div class="fit">建議：公司<b>僅使用 SPF 機制</b>，且確定只有記錄中的 IP 會寄信時使用。</div>
+        </div>
+        <div class="lane soft">
+          <h3><code>~all</code>Soft Fail</h3>
+          <p>不確定是否只有 SPF 清單上的寄信伺服器 IP 會寄信，<b>不直接拒收</b>。</p>
+          <div class="fit">建議：同時使用 <b>DKIM 及 DMARC</b> 機制的企業使用，由後兩者進一步驗證。</div>
+        </div>
+      </div>
+      <div class="callout">
+        <h3>搭配 DKIM 與 DMARC</h3>
+        <p>SPF 驗證<b>寄件來源 IP</b>，DKIM 驗證<b>郵件內容未遭竄改</b>，兩者互補；再搭配 DMARC 指定驗證失敗時的處理方式，可完整防範網域遭到冒用。</p>
+      </div>
+    </section>
+
+    <!-- example -->
+    <section>
+      <h2><span class="n">04</span>範例解析</h2>
+      <div class="ex">
+        <div class="rec" aria-label="SPF 範例記錄">
+          <span class="q">"</span><span class="tok k-v">v=spf1</span><span class="tok k-a">a</span><span class="tok k-a">mx</span><span class="tok k-d">a:hongku.tw</span><span class="tok k-d">mx:mail.hongku.tw</span><span class="tok k-i">ip4:114.34.160.46</span><span class="tok k-e">-all</span><span class="q">"</span>
+        </div>
+        <ol>
+          <li><code>v=spf1</code>：宣告為 SPF version 1。</li>
+          <li><code>a</code>、<code>mx</code>：允許目前網域的 A 記錄與 MX 記錄所對應的 IP 寄信。</li>
+          <li><code>a:hongku.tw</code>：允許 hongku.tw 的 A 記錄所對應的 IP 寄信。</li>
+          <li><code>mx:mail.hongku.tw</code>：允許 mail.hongku.tw 的 MX 記錄所對應的 IP 寄信。</li>
+          <li><code>ip4:114.34.160.46</code>：允許此 IPv4 位址寄信。</li>
+          <li><code>-all</code>：除上述來源外，其餘寄信 IP 一律視為偽造（Hard Fail）。</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- setup -->
+    <section>
+      <h2><span class="n">05</span>於 Synology DNS Server 新增 SPF 記錄</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>新增 TXT 資源記錄<span class="path">DNS Server › 轄區管理 › 編輯 › 資源記錄 › 新增 › TXT</span></h3>
+          <p>於轄區的 <b>編輯資源紀錄</b> 視窗按 <b>新增</b>，選擇 <b>TXT</b>，並輸入：</p>
+          <p><b>名稱</b>：留白（名稱即與網域名稱相同）　<b>TTL</b>：範例 86400 秒　<b>資訊</b>：輸入 SPF 記錄內容，例如 <code>"v=spf1 a mx a:hongku.tw mx:mail.hongku.tw ip4:114.34.160.46 -all"</code></p>
+          <figure class="shot narrow"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/spf-2.jpg" alt="DNS Server 編輯資源紀錄，hongku.tw 新增 TXT 記錄，TTL 86400，資訊為 v=spf1 a mx a:hongku.tw mx:mail.hongku.tw"><figcaption>Synology DNS Server - 新增 SPF 的 TXT 資源記錄範例</figcaption></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/UG/Synology_MailPlus_Server_admin_guide_3/3" target="_blank" rel="noopener noreferrer">Synology 知識中心：Synology MailPlus Server 管理員指南</a>
+      </div>
+      <p class="seealso">參考 DKIM 設定說明：<a href="https://hongku.com.tw/mail-server-dkim/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-dkim/</a></p>
+      <p class="seealso">參考 DMARC 設定說明：<a href="https://hongku.com.tw/mail-server-dmarc/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/mail-server-dmarc/</a></p>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的網域名稱與 IP 位址僅供示意，實際請依您的郵件伺服器與寄信來源設定。</p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>行事曆與聯絡人移轉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --lock:#2f6fb0; --lock-soft:#e3eef9;
+    --danger:#c0493d; --danger-soft:#f8e8e5;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;height:auto}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.62rem,4.6vw,2.45rem);line-height:1.28;
+    letter-spacing:-.01em;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .lead b{color:var(--ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+  .sec-sub b{color:var(--ink)}
+
+  /* what migrates */
+  .mig{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+  .mg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);text-align:center}
+  .mg .ic{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;margin:0 auto 8px}
+  .mg .ic svg{width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .mg b{display:block;font-size:.98rem}
+  .mg span{font-size:.82rem;color:var(--muted)}
+  @media (max-width:560px){ .mig{grid-template-columns:1fr} }
+
+  .danger{margin-top:18px;background:var(--danger-soft);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;font-size:.95rem;color:var(--ink)}
+  .danger b{color:var(--danger)}
+
+  /* prep / steps */
+  .steps{display:grid;gap:14px;margin-top:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;box-shadow:var(--shadow)}
+  .step > div{min-width:0}
+  .step .bullet{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent-strong);flex:none}
+  .step h3{margin:2px 0 6px;font-size:1.06rem;font-weight:700}
+  .step h3 .path{display:block;font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;color:var(--muted);margin-top:2px}
+  .step p{margin:0 0 10px;color:var(--muted);font-size:.96rem}
+  .step p:last-child{margin-bottom:0}
+  .step ul{margin:0 0 8px;padding-left:1.2em;color:var(--muted);font-size:.95rem}
+  .step li{margin:0 0 5px}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--accent-strong)}
+  figure.shot{margin:14px 0 2px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  figure.shot img{display:block;max-width:100%;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--border)}
+  figure.shot figcaption{margin-top:9px;font-size:.82rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:10px} }
+
+  .dl{display:grid;gap:8px;margin:4px 0 10px}
+  .dl a{display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--lock-soft);border:0 !important;border-radius:9px;padding:9px 14px;font-weight:700;color:var(--lock) !important}
+  .dl a span{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.8rem;color:var(--muted)}
+
+  .csv{margin:10px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .csv table{width:100%;border-collapse:collapse;font-size:.86rem}
+  .csv th,.csv td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+  .csv th{background:var(--surface-2);font-size:.78rem;color:var(--muted)}
+  .csv td{font-family:"IBM Plex Mono",monospace}
+  .csv tr:last-child td{border-bottom:0}
+  .diff{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink);margin:10px 0}
+  .diff b{color:var(--warn)}
+
+  .term{margin:8px 0 10px;background:#17232e;border-radius:10px;padding:12px 14px;font-family:"IBM Plex Mono",monospace;font-size:.82rem;line-height:1.7;color:#e7eef4;overflow-x:auto}
+  .term .c{color:#9aabb8;display:block;font-family:"Noto Sans TC",sans-serif;font-size:.74rem;margin-bottom:2px}
+  .term .p{color:#a9efe5;user-select:none}
+  .term .row + .row{margin-top:8px}
+  .term .arg1{color:#ffe2a6} .term .arg2{color:#d9cfff}
+  .args{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:6px 0 10px}
+  .args div{border-radius:9px;padding:8px 12px;font-size:.86rem}
+  .args div b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.8rem}
+  .args .a1{background:#fbf3e1;color:#7a5a12} .args .a2{background:#efebfa;color:#4b3d86}
+
+  .warn{margin:12px 0 4px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+  .warn b{color:var(--warn)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 6px;font-size:1rem;font-weight:700}
+  .card code{font-family:"IBM Plex Mono",monospace;font-size:.86rem;color:var(--lock);background:var(--lock-soft);border-radius:5px;padding:0 6px}
+  .card p{margin:6px 0 0;color:var(--muted);font-size:.9rem;line-height:1.7}
+  .checks{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:10px}
+  .checks li{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow);display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:.94rem;color:var(--muted)}
+  .checks li::before{content:"✓";width:22px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);display:grid;place-items:center;font-weight:900;font-size:.8rem}
+  .checks b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .seealso{margin:14px 0 0;font-size:.9rem;color:var(--ink)}
+  .seealso + .seealso{margin-top:4px}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology MailPlus · Google Workspace 移轉 · 行事曆＆聯絡人篇</p>
+      <h1>Synology MailPlus Server 無痛移轉工具－行事曆＆聯絡人移轉篇</h1>
+      <p class="lead">Synology MailPlus Server 內建 <b>5 個免費帳號授權</b>，並提供移轉工具協助轉換平台。取得 Google 服務金鑰後，即可透過<b>指令列（CLI）</b>將 Google Workspace 的行事曆與聯絡人轉移至 Synology Calendar 與 Synology Contacts。</p>
+      <div class="tags"><span>#Google行事曆聯絡人移轉</span><span>#MailPlus</span></div>
+    </header>
+
+    <section>
+      <h2><span class="n">00</span>轉移範圍與注意事項</h2>
+      <div class="mig">
+        <div class="mg"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><b>行事曆</b><span>→ Synology Calendar</span></div>
+        <div class="mg"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span><b>聯絡人</b><span>→ Synology Contacts</span></div>
+        <div class="mg"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span><b>工作事項</b><span>→ Synology Calendar</span></div>
+      </div>
+      <div class="danger"><b>重要：</b>轉移過程中會<b>清除</b>目的地帳號在 Synology Contacts 及 Synology Calendar 的現有資料，僅保留管理員建立的群組通訊錄；轉移不會影響 Google Workspace 上的資料。轉移期間請避免修改來源端及目的地端的使用者名稱。</div>
+    </section>
+
+    <section>
+      <h2><span class="n">01</span>轉移前的準備</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>取得 Google 服務金鑰</h3>
+          <p>請先完成 <a href="https://hongku.com.tw/google-workspace-to-mailplus-key/" target="_blank" rel="noopener noreferrer">金鑰篇</a> 的步驟，取得 JSON 服務金鑰。</p>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>準備聯絡人及日曆用的使用者清單</h3>
+          <p>使用 Microsoft Excel 或 OpenOffice 建立 CSV 檔案，由左至右填入三欄：</p>
+          <ul>
+            <li><b>帳號類型</b>：依來源帳號類型輸入 <code>user</code>（使用者）或 <code>group</code>（群組）。僅使用者帳號會轉移資料，群組資訊僅用於同步分享權限。</li>
+            <li><b>Google 郵件地址</b>：來源帳號的郵件地址。</li>
+            <li><b>DSM 帳號</b>：本地使用者輸入帳號名稱；LDAP 或網域使用者輸入完整名稱（例如 <code>user1@domain</code> 或 <code>domain\user1</code>）。</li>
+          </ul>
+          <div class="csv">
+            <table>
+              <thead><tr><th>帳號類型</th><th>Google 郵件地址</th><th>DSM 帳號</th></tr></thead>
+              <tbody>
+                <tr><td>user</td><td>yuki@example.com</td><td>yuki</td></tr>
+                <tr><td>user</td><td>jack@example.com</td><td>jack</td></tr>
+                <tr><td>group</td><td>sales@example.com</td><td>sales</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="diff"><b>注意：</b>此清單格式與<b>郵件移轉篇</b>使用的清單不同，兩者無法通用。同一份清單上的使用者須為同一種 DSM 帳號類型。</div>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">02</span>安裝轉移工具</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>下載 Google Workspace Migration Tool for Synology MailPlus</h3>
+          <p>請依目標 NAS 的 DSM 版本下載對應的套件（SPK 檔案）：</p>
+          <div class="dl">
+            <a href="https://pkgupdate.synology.com/spk/v1?major=7&amp;minor=2&amp;micro=0&amp;nano=0&amp;build=64561&amp;unique=synology_apollolake_718%2B&amp;package_name=GWS-Migrate" target="_blank" rel="noopener noreferrer">DSM 7.2 及以上版本<span>下載 SPK</span></a>
+            <a href="https://sy.to/gwsmigrationtool7" target="_blank" rel="noopener noreferrer">DSM 7.0 及 7.1<span>sy.to/gwsmigrationtool7</span></a>
+            <a href="https://sy.to/gwsmigrationtool6" target="_blank" rel="noopener noreferrer">DSM 6.2<span>sy.to/gwsmigrationtool6</span></a>
+          </div>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>以手動安裝方式安裝套件<span class="path">套件中心 › 手動安裝</span></h3>
+          <p>以管理員身分登入 DSM，開啟 <b>套件中心</b>，按 <b>手動安裝</b> 並選擇下載的 SPK 檔案。安裝完成後狀態顯示為 <b>已啟動</b>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-cal-migra-1.jpg" alt="套件中心已安裝 Google Workspace Migration Tool for Synology MailPlus，狀態已啟動"><figcaption>套件中心：Google Workspace Migration Tool for Synology MailPlus 已啟動。</figcaption></figure>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">03</span>執行轉移</h2>
+      <div class="steps">
+        <div class="step"><span class="bullet">1</span><div>
+          <h3>上傳使用者清單與服務金鑰<span class="path">控制台 › 共用資料夾</span></h3>
+          <p>建立一個共用資料夾（範例為 <code>Key</code>），將<b>使用者清單（CSV）</b>與<b>服務金鑰（JSON）</b>上傳至此資料夾。</p>
+        </div></div>
+        <div class="step"><span class="bullet">2</span><div>
+          <h3>以 SSH 登入 DSM 並取得 root 權限</h3>
+          <p>以管理員身分透過 SSH 登入 DSM，並執行 <code>sudo -i</code> 取得 root 權限。</p>
+          <div class="term"><span class="c">取得 root 權限</span><span class="p">$ </span>sudo -i</div>
+        </div></div>
+        <div class="step"><span class="bullet">3</span><div>
+          <h3>切換至存放清單與金鑰的共用資料夾</h3>
+          <div class="term"><span class="c">指令格式</span><span class="p"># </span>cd /&lt;儲存空間&gt;/&lt;共用資料夾&gt;<div class="row"><span class="c">範例</span><span class="p"># </span>cd /volume1/Key</div></div>
+        </div></div>
+        <div class="step"><span class="bullet">4</span><div>
+          <h3>執行轉移指令</h3>
+          <div class="term"><span class="c">指令格式</span><span class="p"># </span>/var/packages/GWS-Migrate/target/bin/migrate <span class="arg1">/&lt;儲存空間&gt;/&lt;共用資料夾&gt;/&lt;服務金鑰&gt;</span> <span class="arg2">/&lt;儲存空間&gt;/&lt;共用資料夾&gt;/&lt;使用者清單&gt;</span><div class="row"><span class="c">範例</span><span class="p"># </span>/var/packages/GWS-Migrate/target/bin/migrate <span class="arg1">/volume1/Key/mailplus-abcd.json</span> <span class="arg2">/volume1/Key/cal.csv</span></div></div>
+          <div class="args"><div class="a1"><b>第 1 個參數</b>服務金鑰（JSON）的完整路徑</div><div class="a2"><b>第 2 個參數</b>使用者清單（CSV）的完整路徑</div></div>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-cal-migra-2.jpg" alt="指令與範例：cd 至共用資料夾，以及執行 migrate 指令並指定服務金鑰與使用者清單路徑"><figcaption>指令格式與範例。</figcaption></figure>
+        </div></div>
+        <div class="step"><span class="bullet">5</span><div>
+          <h3>確認轉移結果</h3>
+          <p>終端機會依序顯示每位使用者的行事曆、事件、聯絡人與工作事項的轉移進度，最後顯示 <code>Migration is successful for N users.</code>。</p>
+          <figure class="shot"><img loading="lazy" src="https://hongku.com.tw/wp-content/uploads/2026/10/google-cal-migra-3.jpg" alt="PuTTY 終端機顯示轉移過程，最後顯示 Migration is successful for 4 users"><figcaption>轉移完成：Migration is successful for 4 users.</figcaption></figure>
+          <ul>
+            <li>若終端機<b>未顯示錯誤訊息</b>，即可前往 Synology Contacts 及 Synology Calendar 確認轉移結果。</li>
+            <li>若終端機<b>顯示錯誤訊息</b>，請參閱下方「日誌與報告」與「錯誤排除」。</li>
+          </ul>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">04</span>日誌與報告</h2>
+      <p class="sec-sub">轉移時會在共用資料夾中產生下列檔案，可依報告內容決定是否需要再次轉移特定使用者：</p>
+      <div class="grid">
+        <div class="card"><code>ccm_debug.log</code><p>程序執行日誌，用於追蹤錯誤。</p></div>
+        <div class="card"><code>result_user_list.csv</code><p>列出 Google 帳號及其對應的 DSM 帳號；若有使用者轉移失敗，可使用此清單再次轉移。</p></div>
+        <div class="card"><code>owner_sharing_calendars.txt</code><p>記錄多人共用的 Google 日曆；此類日曆在轉移時會複製至每位持有人的 DSM 帳號。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">05</span>錯誤排除</h2>
+      <p class="sec-sub">若發生轉移錯誤，請確認是否符合下列條件：</p>
+      <ul class="checks">
+        <li><span>服務帳戶的<b>金鑰為有效金鑰</b>。</span></li>
+        <li><span><b>使用者清單格式正確</b>（帳號類型, Google 郵件地址, DSM 帳號）。</span></li>
+        <li><span>來源帳號存在於 Google Workspace，且具有使用 <b>Google Contacts 及 Google Calendar</b> 的權限。</span></li>
+        <li><span>目的地帳號具有使用 <b>Synology Contacts 及 Synology Calendar</b> 的權限，可於控制台 › 應用程式權限設定。</span></li>
+        <li><span>Synology Contacts 及 Synology Calendar 皆為<b>最新版本</b>。</span></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Google_Workspace_migration_guide" target="_blank" rel="noopener noreferrer">Synology 知識中心：將 Google Workspace 的組織資料轉移至 Synology MailPlus、Contacts、Calendar</a>
+      </div>
+      <p class="seealso">參考金鑰篇：<a href="https://hongku.com.tw/google-workspace-to-mailplus-key/" target="_blank" rel="noopener noreferrer">https://hongku.com.tw/google-workspace-to-mailplus-key/</a></p>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明；範例中的路徑與檔名僅供示意，實際請依您的共用資料夾與檔案名稱輸入，並以 Synology 官方文件為準。</p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C2 Hybrid Share 混合雲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --ink:#17232e; --muted:#5c6b78;
+    --border:#dce3ea; --border-strong:#b7c3cd;
+    --accent:#0b7d74; --accent-strong:#096b63; --accent-soft:#dcefec;
+    --info:#2f6f9e; --info-soft:#e4eef6;
+    --warn:#a9671a; --warn-soft:#f9efdf;
+    --shadow:0 1px 2px rgba(20,35,46,.05), 0 10px 28px rgba(20,35,46,.07);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.85;margin:0;-webkit-font-smoothing:antialiased}
+  img,iframe{max-width:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:clamp(24px,5vw,60px) clamp(16px,4vw,32px) 78px}
+
+  header{margin-bottom:clamp(20px,4vw,30px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-strong);margin:0 0 12px;font-weight:500}
+  h1{font-weight:900;font-size:clamp(1.58rem,4.4vw,2.4rem);line-height:1.28;
+    letter-spacing:-.01em;text-wrap:balance;margin:0 0 16px}
+  .lead{font-size:clamp(1rem,2.6vw,1.14rem);color:var(--muted);margin:0;max-width:66ch}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+
+  /* video */
+  .video{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow);background:#000;margin-top:24px}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vcap{margin:12px 2px 0;font-size:.86rem;color:var(--muted);line-height:1.6}
+  .vcap b{color:var(--ink);font-weight:700}
+  .vcap a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  .vcap a:hover{border-bottom-color:var(--accent-strong)}
+  .vdemo{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.92rem;color:var(--muted);line-height:1.72}
+  .vdemo b{color:var(--ink)}
+
+  /* hybrid diagram */
+  .hybrid{display:flex;align-items:stretch;gap:14px;margin-top:24px}
+  .hnode{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:20px 14px;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .hnode.cloud{border-top:4px solid var(--info)}
+  .hnode.nas{border-top:4px solid var(--accent)}
+  .hnode .ic{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;margin-bottom:3px}
+  .hnode.cloud .ic{background:var(--info-soft);color:var(--info)}
+  .hnode.nas .ic{background:var(--accent-soft);color:var(--accent-strong)}
+  .hnode .ic svg{width:26px;height:26px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .hnode .nm{font-weight:800;font-size:1rem}
+  .hnode .sub{font-size:.82rem;color:var(--muted);line-height:1.6}
+  .hlink{flex:none;align-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--accent-strong);min-width:110px}
+  .hlink .ar{font-size:1.7rem;font-weight:800;line-height:1}
+  .hlink .lb{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:700;text-align:center;line-height:1.5}
+  .hybrid-cap{margin:13px 2px 0;font-size:.86rem;color:var(--muted);text-align:center;line-height:1.6}
+  @media(max-width:560px){
+    .hybrid{flex-direction:column}
+    .hlink{flex-direction:row;gap:9px}
+    .hlink .ar{transform:rotate(90deg)}
+  }
+
+  section{margin-top:clamp(36px,5vw,50px)}
+  h2{font-weight:900;font-size:clamp(1.25rem,3.4vw,1.6rem);letter-spacing:-.005em;
+    margin:0 0 8px;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+  h2 .n{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.9rem;
+    color:var(--accent-strong);border:1px solid var(--border-strong);border-radius:6px;
+    padding:1px 8px;flex:none;transform:translateY(-2px)}
+  .sec-sub{color:var(--muted);font-size:.97rem;margin:0;max-width:66ch}
+
+  /* steps */
+  .steps{display:grid;gap:12px;margin-top:20px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .step .num{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:.9rem;display:grid;place-items:center;flex:none}
+  .step .st{font-weight:800;color:var(--ink);font-size:1.02rem;margin:0 0 2px}
+  .step p{margin:0;color:var(--muted);font-size:.95rem}
+  .step b{color:var(--ink)}
+  .step a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+
+  /* callout */
+  .callout{margin-top:22px;background:var(--surface);border:1px solid var(--border);
+    border-left:4px solid var(--warn);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
+  .callout p{margin:0;color:var(--muted);font-size:.95rem}
+  .callout b{color:var(--ink)}
+
+  footer{margin-top:clamp(36px,5vw,50px);padding-top:24px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted)}
+  footer a{color:var(--accent-strong);text-decoration:none;border-bottom:1px solid var(--border-strong);word-break:break-all}
+  footer a:hover{border-bottom-color:var(--accent-strong)}
+  .reflist{display:grid;gap:8px;margin:6px 0 0}
+  .note{margin-top:16px;font-size:.82rem;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Synology C2 · 混合雲 · #HybridShare</p>
+      <h1>C2 OneStorage Hybrid Share:結合本地效能與雲端擴展的混合雲資料夾</h1>
+      <p class="lead"><strong>Hybrid Share</strong> 結合 <strong>NAS 的本地效能</strong>與 <strong>C2 Storage 的雲端擴展性</strong>:資料可<strong>雲地同步</strong>、常用檔案<strong>快取在本地</strong>加速存取,也能<strong>釋放本地空間</strong>只留雲端,兼顧安全與空間的靈活運用。本篇示範如何建立 Hybrid Share 混合雲資料夾並完成設定。</p>
+      <div class="tags">
+        <span>#SynologyC2</span><span>#C2OneStorage</span><span>#HybridShare</span><span>#混合雲</span><span>#雲端儲存</span>
+      </div>
+    </header>
+
+    <!-- video -->
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/BR8gUJqR_Qk"
+        title="Synology C2 OneStorage Hybrid Share 混合雲資料夾設定示範"
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <p class="vcap">▶ 影片:<b>C2 OneStorage Hybrid Share 混合雲資料夾設定示範</b>　·　<a href="https://youtu.be/BR8gUJqR_Qk" target="_blank" rel="noopener noreferrer">在 YouTube 開啟</a></p>
+    <div class="vdemo"><b>本片示範:</b>建立 Hybrid Share 資料夾、NAS 端<b>加密與快取設定</b>、在 File Station <b>釘選／釋放</b>檔案,以及用 <b>C2 Storage Explorer</b> 管理雲端檔案。</div>
+
+    <!-- hybrid diagram -->
+    <div class="hybrid" role="img" aria-label="Hybrid Share 架構:完整資料存在 C2 Storage 雲端,常用檔案快取在本地 NAS,兩者雲地同步。">
+      <div class="hnode cloud">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 .5-8 5 5 0 0 1 9.5-1 3.5 3.5 0 0 1 .5 7"/></svg></span>
+        <span class="nm">C2 Storage 雲端</span>
+        <span class="sub">存放完整資料<br>上傳前本地加密</span>
+      </div>
+      <div class="hlink" aria-hidden="true">
+        <span class="ar">⇄</span>
+        <span class="lb">雲地同步<br>本地快取</span>
+      </div>
+      <div class="hnode nas">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01"/><path d="M11 8h6M11 12h6M11 16h6"/></svg></span>
+        <span class="nm">NAS Hybrid Share</span>
+        <span class="sub">常用檔案<br>快取在本地加速</span>
+      </div>
+    </div>
+    <p class="hybrid-cap">完整資料存在 C2 雲端;常用檔案「釘選」快取到本地加速,不常用的「釋放本地空間」只留雲端。</p>
+
+    <!-- 01 four steps -->
+    <section>
+      <h2><span class="n">01</span>設定五步驟</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span>
+          <div><p class="st">訂閱 C2 OneStorage</p>
+          <p>使用 Hybrid Share 前,需先訂閱 <b>C2 OneStorage</b> 方案(可參考 <a href="https://c2.synology.com/zh-tw/pricing/onestorage" target="_blank" rel="noopener noreferrer">C2 OneStorage 方案與定價</a>)。</p></div></div>
+        <div class="step"><span class="num">2</span>
+          <div><p class="st">建立資料夾</p>
+          <p>登入 <b>C2 帳戶</b>,建立 <b>Hybrid Share 資料夾</b>並設定<b>配額</b>。</p></div></div>
+        <div class="step"><span class="num">3</span>
+          <div><p class="st">NAS 設定</p>
+          <p>設定<b>加密金鑰</b>——資料上傳前會先在本地加密,<b>請妥善保存金鑰</b>;接著設定<b>本地快取容量</b>與<b>使用者權限</b>。</p></div></div>
+        <div class="step"><span class="num">4</span>
+          <div><p class="st">檔案管理</p>
+          <p>在 <b>File Station</b> 上傳檔案;常用檔案可「<b>釘選至本地快取</b>」,不常用的可「<b>釋放本地空間</b>」來節省 NAS 容量。</p></div></div>
+        <div class="step"><span class="num">5</span>
+          <div><p class="st">雲端存取</p>
+          <p>透過 <b>C2 Storage Explorer</b>,在瀏覽器中直接管理雲端檔案。</p></div></div>
+      </div>
+      <div class="callout">
+        <p><b>關於加密金鑰:</b>Hybrid Share 的資料在<b>上傳雲端前會先於本地加密</b>,金鑰由你保管;請務必<b>妥善保存金鑰</b>,遺失將無法解密還原資料。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>參考資料</strong></p>
+      <div class="reflist">
+        <a href="https://www.synology.com/zh-tw/dsm/feature/hybrid-share" target="_blank" rel="noopener noreferrer">Synology:Hybrid Share 功能介紹</a>
+        <a href="https://kb.synology.com/zh-tw/DSM/tutorial/Quick_Start_Hybrid_Share" target="_blank" rel="noopener noreferrer">Synology 知識中心:Hybrid Share 快速入門指南</a>
+      </div>
+      <p class="note">※ 本文為協助一般使用者理解的整理說明;Hybrid Share 需搭配 C2 Storage／OneStorage 訂閱,可用的配額、快取、加密與操作介面會因方案與版本而異,實際請以 Synology 官方說明為準。</p>
+    </footer>
+  </main>
+</body>
+</html>
