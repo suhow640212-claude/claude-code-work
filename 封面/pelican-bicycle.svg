@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="800" height="600">
+  <title>騎自行車的鵜鶘</title>
+  <!-- 背景 -->
+  <rect width="400" height="300" fill="#bfe6ff"/>
+  <circle cx="345" cy="50" r="24" fill="#ffd84d"/>
+  <rect y="262" width="400" height="38" fill="#7cc576"/>
+  <line x1="0" y1="270" x2="400" y2="270" stroke="#5a9e55" stroke-width="2"/>
+
+  <!-- 自行車 -->
+  <g fill="none" stroke="#2b2b2b" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 車輪 -->
+    <circle cx="110" cy="220" r="44" stroke-width="5"/>
+    <circle cx="290" cy="220" r="44" stroke-width="5"/>
+    <g stroke-width="1.2" stroke="#666">
+      <path d="M110 176V264M66 220H154M79 189L141 251M141 189L79 251"/>
+      <path d="M290 176V264M246 220H334M259 189L321 251M321 189L259 251"/>
+    </g>
+    <!-- 車架 -->
+    <g stroke="#d6332e" stroke-width="5">
+      <path d="M110 220L195 222L172 152Z"/>
+      <path d="M172 152L262 158L195 222"/>
+      <path d="M262 158L290 220"/>
+      <path d="M266 148L262 158"/>
+    </g>
+    <!-- 把手與座墊 -->
+    <path d="M266 148Q262 136 276 134" stroke-width="4"/>
+    <path d="M158 146H184" stroke-width="6"/>
+    <!-- 曲柄與踏板 -->
+    <circle cx="195" cy="222" r="9" stroke-width="3"/>
+    <path d="M195 222L213 240M195 222L177 204" stroke-width="4"/>
+    <path d="M206 242H220M170 204H184" stroke-width="5"/>
+  </g>
+  <circle cx="110" cy="220" r="4" fill="#2b2b2b"/>
+  <circle cx="290" cy="220" r="4" fill="#2b2b2b"/>
+
+  <!-- 鵜鶘 -->
+  <g stroke="#e08a1e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- 腿 -->
+    <path d="M178 140L200 190L213 240"/>
+    <path d="M166 140L160 178L177 204"/>
+  </g>
+  <!-- 腳 -->
+  <path d="M206 240L222 238L214 245Z" fill="#e08a1e"/>
+  <path d="M170 203L186 201L178 208Z" fill="#e08a1e"/>
+  <!-- 尾巴 -->
+  <path d="M128 118L104 112L112 126L104 136L132 132Z" fill="#e6e6e6" stroke="#999" stroke-width="1.5"/>
+  <!-- 身體 -->
+  <ellipse cx="170" cy="120" rx="46" ry="30" transform="rotate(-15 170 120)" fill="#ffffff" stroke="#999" stroke-width="2"/>
+  <!-- 翅膀(抓著把手) -->
+  <path d="M150 108Q190 96 226 126Q248 140 268 138Q246 150 222 140Q190 132 158 128Z" fill="#e3e3e3" stroke="#999" stroke-width="2"/>
+  <path d="M168 118Q190 116 208 128M176 126Q196 126 212 134" stroke="#aaa" stroke-width="1.5" fill="none"/>
+  <!-- 脖子 -->
+  <path d="M196 104Q208 80 202 62Q198 44 214 38" stroke="#ffffff" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <!-- 頭 -->
+  <circle cx="218" cy="40" r="15" fill="#ffffff" stroke="#999" stroke-width="2"/>
+  <path d="M208 28Q216 18 226 26" stroke="#f2d06b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- 喉囊與長喙 -->
+  <path d="M228 46Q262 92 300 54Q270 60 230 50Z" fill="#f6a64a" stroke="#c9741a" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M228 34L306 46L300 54L229 48Z" fill="#ffc04d" stroke="#c9741a" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="303" cy="50" r="3" fill="#d9531e"/>
+  <!-- 眼睛 -->
+  <circle cx="222" cy="37" r="4" fill="#ffffff" stroke="#333" stroke-width="1"/>
+  <circle cx="223" cy="37" r="2.2" fill="#222"/>
+
+  <!-- 速度線 -->
+  <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.8">
+    <path d="M30 120H70M20 150H60M40 180H75"/>
+  </g>
+</svg>
